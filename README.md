@@ -5,8 +5,7 @@ Primarily for use at NI. If you also use Review Board, it is possible that this 
 ## Getting Started
 
 1. Install a userscripts extension — such as [Tampermonkey](https://tampermonkey.net/) or [Violentmonkey](https://violentmonkey.github.io/) — and refresh this page
-2. Install this [userscript](https://github.com/ni/reviewboard-userscripts/raw/master/src/ni-reviewboard.user.js)
-3. Refresh Review Board
+2. [Install this userscript](https://github.com/ni/reviewboard-userscripts/raw/master/src/ni-reviewboard.user.js)
 
 ## What does it do?
 
@@ -38,4 +37,4 @@ Tampermonkey and Violentmonkey auto update userscripts daily. You can force an u
 - [Support and troubleshooting](docs/SUPPORT.md)
 - [Contributing to this project](docs/CONTRIBUTING.md)
 - [Privacy policy](docs/privacy-policy.md)
-- [MIT License](LICENSE)
+- [MIT License](LICENSE.txt)
