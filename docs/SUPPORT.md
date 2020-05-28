@@ -17,4 +17,4 @@ If you have not yet resolved the issue or if you believe there is a bigger under
 
 ## Reporting an issue
 
-[Post here, thanks!](https://github.com/alejandro5042/azdo-userscripts/issues)
+[Post here, thanks!](https://github.com/ni/reviewboard-userscripts/issues)

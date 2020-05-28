@@ -5,7 +5,7 @@ Primarily for use at NI. If you also use Review Board, it is possible that this 
 ## Getting Started
 
 1. Install a userscripts extension — such as [Tampermonkey](https://tampermonkey.net/) or [Violentmonkey](https://violentmonkey.github.io/) — and refresh this page
-2. Install this [userscript](https://github.com/alejandro5042/azdo-userscripts/raw/master/src/azdo-pr-dashboard.user.js)
+2. Install this [userscript](https://github.com/ni/reviewboard-userscripts/raw/master/src/ni-reviewboard.user.js)
 3. Refresh Review Board
 
 ## What does it do?
