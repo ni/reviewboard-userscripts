@@ -1,9 +1,11 @@
 // ==UserScript==
 // @name         More Awesome NI Review Board
-// @version      1.0.1
-// @namespace    https://ni.com
+// @version      1.1.0
+// @namespace    https://www.ni.com
 // @author       Alejandro Barreto (National Instruments)
 // @license      MIT
+// @homepageURL  https://github.com/ni/reviewboard-userscripts
+// @supportURL   https://github.com/ni/reviewboard-userscripts/blob/master/docs/SUPPORT.md
 // @updateURL    https://rebrand.ly/update-ni-reviewboard-user-js
 // @include      https://review-board.natinst.com/*
 // @run-at       document-start
