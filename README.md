@@ -38,3 +38,8 @@ Tampermonkey and Violentmonkey auto update userscripts daily. You can force an u
 - [Contributing to this project](docs/CONTRIBUTING.md)
 - [Privacy policy](docs/privacy-policy.md)
 - [MIT License](LICENSE.txt)
+
+
+---
+
+*Made with :heart: by Dev Efficiency*
