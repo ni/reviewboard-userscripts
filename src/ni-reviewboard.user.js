@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         More Awesome NI Review Board
-// @version      1.1.0
+// @version      1.1.1
 // @namespace    https://www.ni.com
 // @author       Alejandro Barreto (National Instruments)
 // @license      MIT
@@ -191,7 +191,7 @@
           for (const userUrl in userVotes) {
             if (Object.prototype.hasOwnProperty.call(userVotes, userUrl)) {
               const username = userUrl.replace('/users/', '').replace('/', '');
-              const annotation = username + userVotes[userUrl].replace('⤷', '-');
+              const annotation = username + userVotes[userUrl];
               ownersHtml = ownersHtml.replace(username, annotation);
             }
           }
