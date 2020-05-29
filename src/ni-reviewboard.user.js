@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         More Awesome NI Review Board
-// @version      1.1.1
+// @version      1.1.2
 // @namespace    https://www.ni.com
 // @author       Alejandro Barreto (National Instruments)
 // @license      MIT
@@ -130,7 +130,7 @@
             }
 
             if (comment.match(/going to check/)) {
-              userVotes[userUrl] = '💬';
+              userVotes[userUrl] = ' 💬';
               if (reviewElement) {
                 for (const element of previousPrebuildReviewElements) {
                   element.classList.add('old');
