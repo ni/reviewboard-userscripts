@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         More Awesome NI Review Board
-// @version      1.1.5
+// @version      1.1.6
 // @namespace    https://www.ni.com
 // @author       Alejandro Barreto (National Instruments)
 // @license      MIT
@@ -233,6 +233,14 @@
   // Dashboard sorting.
   eus.onUrl(/\/dashboard\//gi, (session, urlMatch) => {
     session.onFirst(document, '.datagrid-body', all => {
+      session.onAnyChangeTo(all.querySelector('thead'), thead => {
+        if (all.querySelector('colgroup .my_comments')) {
+          eus.toast.fire({
+            title: 'When you are done changing/rearranging columns, reload the page to refresh the review list.',
+          });
+        }
+      });
+
       if (!all.querySelector('colgroup .my_comments')) {
         if (GM_getValue('showAddMyCommentsColumnDialog', true)) {
           GM_setValue('showAddMyCommentsColumnDialog', false);
@@ -243,12 +251,6 @@
         }
         return;
       }
-
-      session.onAnyChangeTo(all.querySelector('thead'), thead => {
-        eus.toast.fire({
-          title: 'When you are done rearranging columns, reload the page to refresh the review list.',
-        });
-      });
 
       const incompleteTable = copyEmptyTable(all);
       const reviewedTable = copyEmptyTable(all);
