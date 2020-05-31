@@ -9,6 +9,8 @@ Primarily for use at NI. If you also use Review Board, it is possible that this 
 
 ## What does it do?
 
+![](docs/overview.png)
+
 ### Neat new features!
 
 - Categories reviews into Incomplete, Reviewed, and Ship It groups
