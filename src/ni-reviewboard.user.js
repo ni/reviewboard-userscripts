@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         More Awesome NI Review Board
-// @version      1.1.9
+// @version      1.1.10
 // @namespace    https://www.ni.com
 // @author       Alejandro Barreto (National Instruments)
 // @license      MIT
@@ -381,6 +381,12 @@
     .gravatar-container, .user-nav-item img {
       border-style: none !important;
       box-shadow: 1px 1px 4px #00000080;
+    }
+
+    /* Fix issues with avatars and review comments not appear flush with each other. */
+    #reviews .box {
+      margin-top: 0;
+      margin-bottom: 3em;
     }
 
     /* Give the user avatar some spacing before your username . */
