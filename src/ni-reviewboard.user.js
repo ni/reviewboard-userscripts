@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         More Awesome NI Review Board
-// @version      1.1.2
+// @version      1.1.3
 // @namespace    https://www.ni.com
 // @author       Alejandro Barreto (National Instruments)
 // @license      MIT
@@ -388,15 +388,24 @@
 
     /* Make modal boxes a normal, usable size. */
     .modalbox {
-      width: 50vw !important;
-      max-width: 80em;
+      width: auto !important;
       height: auto !important;
     }
     .modalbox-inner {
       background: none;
     }
-    #review-form {
+    .modalbox-contents {
+      width: auto !important;
       height: auto !important;
+      min-width: 40vw;
+      min-height: 20vh;
+      max-width: 90vw;
+      max-height: 80vh;
+      overflow: auto;
+      display: block;
+    }
+    .modalbox-contents .text-editor {
+      width: 55vw !important;
     }
     .modalbox .modalbox-buttons {
       position: relative !important;
