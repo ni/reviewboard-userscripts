@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         More Awesome NI Review Board
-// @version      1.1.4
+// @version      1.1.5
 // @namespace    https://www.ni.com
 // @author       Alejandro Barreto (National Instruments)
 // @license      MIT
@@ -613,5 +613,9 @@
     }
     body.ni-feed-newest-first #reviews #view_controls {
       order: 100000;
-    }`);
+    }
+
+    /* Fix a bug where the page does not use up all available page width. */
+    #container { width: 100%; }
+  `);
 }());
