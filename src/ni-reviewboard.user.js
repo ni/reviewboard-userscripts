@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         More Awesome NI Review Board
-// @version      1.1.7
+// @version      1.1.8
 // @namespace    https://www.ni.com
 // @author       Alejandro Barreto (National Instruments)
 // @license      MIT
@@ -382,6 +382,12 @@
       border-style: solid !important;
       box-shadow: 2px 2px 3px #888;
     }
+
+    /* Give the user avatar some spacing before your username . */
+    #accountnav .user-nav-item img { margin-right: 1ex; }
+
+    /* Highlighting your username should keep the text visible on white backdrop. */
+    #accountnav:hover .user-nav-item { color: #000 !important; }
 
     /* Remove some useless header text in the review UI. */
     #fieldset_info_head, label[for=field_description], label[for=field_summary] {
