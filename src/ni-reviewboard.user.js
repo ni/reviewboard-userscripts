@@ -442,11 +442,6 @@
       padding: 0 !important;
     }
 
-    /* Change default fonts. */
-    .rich-text:not(.line), textarea, .CodeMirror, .editable.field-text-area {
-      /*font-family: Verdana, Arial, Helvetica, Sans-Serif;*/
-    }
-
     /* Make comment spacing tighter. */
     #reviews .review .body .body_top,
     #reviews .review .body .body_bottom {
@@ -476,8 +471,6 @@
     .changedesc .box .body { padding: 1em 4em; }
 
     /* Style some categories for the review dashboard. */
-    details.review-category {
-    }
     details.review-category summary {
       padding: 0.5em 2em;
       font-size: 1.5em;
