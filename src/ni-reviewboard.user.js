@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         More Awesome NI Review Board
-// @version      1.1.8
+// @version      1.1.9
 // @namespace    https://www.ni.com
 // @author       Alejandro Barreto (National Instruments)
 // @license      MIT
@@ -379,8 +379,8 @@
 
     /* Make the border around gravatars more solid and give it a subtle drop shadow. */
     .gravatar-container, .user-nav-item img {
-      border-style: solid !important;
-      box-shadow: 2px 2px 3px #888;
+      border-style: none !important;
+      box-shadow: 1px 1px 4px #00000080;
     }
 
     /* Give the user avatar some spacing before your username . */
