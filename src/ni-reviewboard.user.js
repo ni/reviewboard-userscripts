@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         More Awesome NI Review Board
-// @version      1.1.12
+// @version      1.2.0
 // @namespace    https://www.ni.com
 // @author       Alejandro Barreto (National Instruments)
 // @license      MIT
@@ -560,6 +560,12 @@
     /* Make the submitted banner green. */
     #submitted-banner {
       background: #ada;
+    }
+
+    /* Make the review draft banner yellow. */
+    #review-banner .banner {
+      background: #fd6;
+      border-color: #555;
     }
 
     /* Make the owners paragraph special looking. */
