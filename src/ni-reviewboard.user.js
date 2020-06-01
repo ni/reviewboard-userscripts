@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         More Awesome NI Review Board
-// @version      1.2.1
+// @version      1.3.0
 // @namespace    https://www.ni.com
 // @author       Alejandro Barreto (National Instruments)
 // @license      MIT
@@ -597,6 +597,9 @@
     body.ni-dark .datagrid-title {
       color: #aaa !important;
     }
+    body.ni-dark .page-sidebar-items .item:not(.active) .count {
+      color: #ea4 !important;
+    }
     body.ni-dark #navbar a,
     body.ni-dark .datagrid-top-filters a {
       color: #66f !important;
@@ -614,6 +617,9 @@
     body.ni-middle .page-sidebar-items h3.label,
     body.ni-middle .datagrid-title {
       color: #ccc !important;
+    }
+    body.ni-middle .page-sidebar-items .item:not(.active) .count {
+      color: #fb2 !important;
     }
     body.ni-middle #navbar a,
     body.ni-middle .datagrid-top-filters a {
