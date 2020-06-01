@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         More Awesome NI Review Board
-// @version      1.2.0
+// @version      1.2.1
 // @namespace    https://www.ni.com
 // @author       Alejandro Barreto (National Instruments)
 // @license      MIT
@@ -231,7 +231,7 @@
       session.onAnyChangeTo(all.querySelector('thead'), thead => {
         if (all.querySelector('colgroup .my_comments')) {
           eus.toast.fire({
-            title: 'When you are done changing/rearranging columns, reload the page to refresh the review list.',
+            title: 'Review table modified — Refresh the page to update groupings',
           });
         }
       });
