@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         More Awesome NI Review Board
-// @version      1.1.11
+// @version      1.1.12
 // @namespace    https://www.ni.com
 // @author       Alejandro Barreto (National Instruments)
 // @license      MIT
@@ -58,7 +58,7 @@
 
     const reviewIdMatch = window.location.href.match(/\/r\/([0-9]*)\//i);
     if (reviewIdMatch) {
-      const reviewId = reviewIdMatch[1];
+      const requestId = reviewIdMatch[1];
 
       // Add an icon to the complete file from its diff.
       if (window.location.href.includes('/diff/')) {
@@ -102,27 +102,14 @@
         removeImmediateInnerText(groupsField);
         removeImmediateInnerText(peopleField);
 
-        // Start both fetches in parallel.
-        const maxReviewCount = 200; // The hard limit imposed by the Review Board API.
-        const reviewRequestFetch = fetch(`https://review-board.natinst.com/api/review-requests/${reviewId}/`);
-        const reviewDataFetch = fetch(`https://review-board.natinst.com/api/review-requests/${reviewId}/reviews/?max-results=${maxReviewCount}`);
-        const reviewRequest = (await (await reviewRequestFetch).json()).review_request;
-        const reviewData = (await (await reviewDataFetch).json());
-
-        // See if this request has too many reviews.
-        if (reviewData.total_results > maxReviewCount) {
-          eus.toast.fire({ icon: 'error', html: `Parsing only the first ${maxReviewCount} of ${reviewData.total_results} reviews.<br>Approval annotations may be wrong.` });
-        }
-
         // Go through each user and record their approval.
         const userVotes = {};
         let previousPrebuildReviewElements = [];
-        for (const review of reviewData.reviews) {
+        for await (const review of getReviewBoardReviews(requestId)) {
           if (!review.public) continue;
 
           const userUrl = review.links.user.href.replace('https://review-board.natinst.com/api', '');
           const userIsPrebuild = userUrl === '/users/prebuild/';
-          console.log("***", userUrl, userIsPrebuild, review);
           const reviewElement = document.querySelector(`.review[data-review-id="${review.id}"]`);
           let customReviewElementLabel = null;
           let customReviewElementSubHeader = null;
@@ -137,7 +124,7 @@
             }
 
             if (comment.match(/going to check/)) {
-              userVotes[userUrl] = ' 💬';
+              userVotes[userUrl] = '';
               if (reviewElement) {
                 for (const element of previousPrebuildReviewElements) {
                   element.classList.add('old');
@@ -217,6 +204,7 @@
         }
 
         // Annotate groups on the right.
+        const reviewRequest = await getReviewBoardRequest(requestId);
         for (const group of reviewRequest.target_groups) {
           // Fetch each group in parallel.
           fetch(`${group.href}/users/`)
@@ -321,6 +309,20 @@
       }
       child = nextChild;
     }
+  }
+
+  async function getReviewBoardRequest(requestId) {
+    return (await (await fetch(`https://review-board.natinst.com/api/review-requests/${requestId}/`)).json()).review_request;
+  }
+
+  async function* getReviewBoardReviews(requestId) {
+    let nextReviewsFetchUrl = `https://review-board.natinst.com/api/review-requests/${requestId}/reviews/?max-results=200`;
+    do {
+      // eslint-disable-next-line no-await-in-loop
+      const reviewData = (await (await fetch(nextReviewsFetchUrl)).json());
+      nextReviewsFetchUrl = reviewData.links.next ? reviewData.links.next.href : null;
+      yield* reviewData.reviews;
+    } while (nextReviewsFetchUrl);
   }
 
   GM_addStyle(/* css */ `
