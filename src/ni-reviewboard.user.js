@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         More Awesome NI Review Board
-// @version      1.1.10
+// @version      1.1.11
 // @namespace    https://www.ni.com
 // @author       Alejandro Barreto (National Instruments)
 // @license      MIT
@@ -103,10 +103,16 @@
         removeImmediateInnerText(peopleField);
 
         // Start both fetches in parallel.
+        const maxReviewCount = 200; // The hard limit imposed by the Review Board API.
         const reviewRequestFetch = fetch(`https://review-board.natinst.com/api/review-requests/${reviewId}/`);
-        const reviewDataFetch = fetch(`https://review-board.natinst.com/api/review-requests/${reviewId}/reviews/`);
+        const reviewDataFetch = fetch(`https://review-board.natinst.com/api/review-requests/${reviewId}/reviews/?max-results=${maxReviewCount}`);
         const reviewRequest = (await (await reviewRequestFetch).json()).review_request;
         const reviewData = (await (await reviewDataFetch).json());
+
+        // See if this request has too many reviews.
+        if (reviewData.total_results > maxReviewCount) {
+          eus.toast.fire({ icon: 'error', html: `Parsing only the first ${maxReviewCount} of ${reviewData.total_results} reviews.<br>Approval annotations may be wrong.` });
+        }
 
         // Go through each user and record their approval.
         const userVotes = {};
@@ -116,6 +122,7 @@
 
           const userUrl = review.links.user.href.replace('https://review-board.natinst.com/api', '');
           const userIsPrebuild = userUrl === '/users/prebuild/';
+          console.log("***", userUrl, userIsPrebuild, review);
           const reviewElement = document.querySelector(`.review[data-review-id="${review.id}"]`);
           let customReviewElementLabel = null;
           let customReviewElementSubHeader = null;
