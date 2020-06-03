@@ -114,10 +114,10 @@
           let customReviewElementLabel = null;
           let customReviewElementSubHeader = null;
 
+          const comment = review.body_top;
           if (userIsPrebuild) {
             // Record the vote of a build user.
 
-            const comment = review.body_top;
             let match;
             if (!(userUrl in userVotes) || userVotes[userUrl] === '💬') {
               userVotes[userUrl] = '';
@@ -151,6 +151,10 @@
             // Record the vote of a non-build user.
             const vote = review.ship_it ? ' ✅' : ' 💬';
             userVotes[userUrl] = vote;
+
+            if (comment.match(/^I decline this review\./i)) {
+              userVotes[userUrl] = " X";
+            }
           }
 
           // Annotate the review on the HTML page.
