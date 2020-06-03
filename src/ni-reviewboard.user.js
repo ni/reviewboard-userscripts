@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         More Awesome NI Review Board
-// @version      1.4.0
+// @version      1.5.0
 // @namespace    https://www.ni.com
 // @author       Alejandro Barreto (National Instruments)
 // @license      MIT
@@ -114,17 +114,17 @@
           let customReviewElementLabel = null;
           let customReviewElementSubHeader = null;
 
-          const comment = review.body_top;
           if (userIsPrebuild) {
             // Record the vote of a build user.
 
+            const comment = review.body_top;
             let match;
-            if (!(userUrl in userVotes) || userVotes[userUrl] === '💬') {
+            if (userVotes[userUrl] === ' 💬') {
               userVotes[userUrl] = '';
             }
 
             if (comment.match(/going to check/)) {
-              userVotes[userUrl] = '';
+              userVotes[userUrl] = ' 💬';
               if (reviewElement) {
                 for (const element of previousPrebuildReviewElements) {
                   element.classList.add('old');
@@ -151,10 +151,6 @@
             // Record the vote of a non-build user.
             const vote = review.ship_it ? ' ✅' : ' 💬';
             userVotes[userUrl] = vote;
-
-            if (comment.match(/^I decline this review\./i)) {
-              userVotes[userUrl] = " X";
-            }
           }
 
           // Annotate the review on the HTML page.
@@ -217,10 +213,9 @@
               const groupUrl = `/groups/${group.title}/`;
               for (const user of groupMembers.users) {
                 const vote = userVotes[user.url];
-                if (vote) {
-                  for (const link of document.querySelectorAll(`#review_request a[href="${groupUrl}"]`)) {
-                    link.insertAdjacentHTML('beforeend', `<br>⤷ ${user.username}${vote}`);
-                  }
+                if (!vote) continue;
+                for (const link of document.querySelectorAll(`#review_request a[href="${groupUrl}"]`)) {
+                  link.insertAdjacentHTML('beforeend', `<br>⤷ ${user.username}${vote}`);
                 }
               }
             });
