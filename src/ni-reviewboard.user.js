@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         More Awesome NI Review Board
-// @version      1.12.0
+// @version      1.12.1
 // @namespace    https://www.ni.com
 // @author       Alejandro Barreto (National Instruments)
 // @license      MIT
@@ -72,7 +72,8 @@
           for (const group of defaultReviewer.groups) {
             if (group.title === name) {
               const description = link.parentNode.nextSibling;
-              description.insertAdjacentHTML('beforeEnd', `<div class="default-reviewer-info"><b>${defaultReviewer.name}:</b>  ${defaultReviewer.file_regex}</div>`);
+              const repo = defaultReviewer.repositories.map(r => r.title).join(' ');
+              description.insertAdjacentHTML('beforeEnd', `<div class="default-reviewer-info"><b>${defaultReviewer.name}${repo ? ` [${repo}]` : ''}:</b>  ${defaultReviewer.file_regex}</div>`);
               break;
             }
           }
@@ -828,6 +829,10 @@
       background: #f0f0f0;
       padding-left: 1em;
       font-family: Consolas, monospace;
+      overflow-wrap: anywhere;
+      white-space: normal;
+      line-height: normal;
+      padding: 1ex 2ex;
     }
   `);
 }());

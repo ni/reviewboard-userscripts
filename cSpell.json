@@ -15,7 +15,8 @@
         "tampermonkey",
         "userscript",
         "userscripts",
-        "violentmonkey"
+        "violentmonkey",
+        "monospace"
     ],
     "dictionaries": [
         "fonts",
