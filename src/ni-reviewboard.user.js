@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         More Awesome NI Review Board
-// @version      1.6.0
+// @version      1.7.0
 // @namespace    https://www.ni.com
 // @author       Alejandro Barreto (National Instruments)
 // @license      MIT
@@ -573,6 +573,7 @@
       border: 1px solid #ddd;
       padding: 1em 2em;
       border-radius: 5px;
+      transition: 0.3s;
     }
     .owner-info button {
       display: block;
