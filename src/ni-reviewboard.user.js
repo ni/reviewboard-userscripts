@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         More Awesome NI Review Board
-// @version      1.8.0
+// @version      1.8.1
 // @namespace    https://www.ni.com
 // @author       Alejandro Barreto (National Instruments)
 // @license      MIT
@@ -75,7 +75,6 @@
         });
       }
 
-
       // Annotate approval details on users and groups.
       eus.globalSession.onFirst(document, '#fieldset_reviewers_body', async (targetPeopleAndGroups) => {
         const groupsField = document.getElementById('field_target_groups');
@@ -139,8 +138,8 @@
             if (comment.match(/going to check/)) {
               user.vote = '🔨';
               user.details = '';
-              for (const element of prebuildThreads) {
-                element.classList.add('old');
+              for (const prebuildThread of prebuildThreads) {
+                prebuildThread.classList.add('old');
               }
               prebuildThreads = [];
             // eslint-disable-next-line no-cond-assign
@@ -232,6 +231,7 @@
           swal.fire({
             input: 'text',
             title: `Declining ${username}`,
+            text: 'They will be crossed out in the list but will still receive emails. Optional decline reason:',
             inputPlaceholder: defaultReason,
             confirmButtonText: 'Decline',
             confirmButtonColor: '#e40',
@@ -255,6 +255,7 @@
           swal.fire({
             input: 'text',
             title: `Resetting ${username}`,
+            text: 'Their status will be reset and they will receive an email. Optional reset reason:',
             inputPlaceholder: defaultReason,
             confirmButtonText: 'Reset',
             confirmButtonColor: '#e40',
