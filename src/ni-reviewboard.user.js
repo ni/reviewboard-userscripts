@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         More Awesome NI Review Board
-// @version      1.10.1
+// @version      1.11.0
 // @namespace    https://www.ni.com
 // @author       Alejandro Barreto (National Instruments)
 // @license      MIT
@@ -740,7 +740,7 @@
     }
 
     /* Give rich text boxes rounded corners. */
-    .rich-text:not(.line) {
+    .rich-text:not(.line), .field {
       border-radius: 5px;
     }
 
