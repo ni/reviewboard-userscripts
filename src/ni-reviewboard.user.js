@@ -224,38 +224,44 @@
           event.preventDefault();
 
           const { username } = button.dataset;
-          const result = await swal.fire({
+          const defaultReason = 'Not needed for these changes.';
+          swal.fire({
             input: 'text',
             title: `Declining ${username}`,
-            inputPlaceholder: 'Provide a reason (or leave empty)...',
+            inputPlaceholder: defaultReason,
+            confirmButtonText: 'Decline',
+            confirmButtonColor: '#e40',
             showCancelButton: true,
+            showLoaderOnConfirm: true,
+            preConfirm: async reason => {
+              await postReview(requestId, `Declining ${username}: ${reason || defaultReason}`);
+              // eslint-disable-next-line no-restricted-globals
+              location.reload();
+              await eus.sleep(100000); // Reload isn't blocking, so let's sleep while we wait for the page to reload.
+            },
           });
-          if (result.dismiss) return;
-
-          const reason = result.value.trim() || 'No reason specified.';
-          await postReview(requestId, `Declining ${username}: ${reason}`);
-
-          // eslint-disable-next-line no-restricted-globals
-          location.reload();
         });
 
         eus.globalSession.on(targetPeopleAndGroups, '.user-action.reset', 'click', async (event, button) => {
           event.preventDefault();
 
           const { username } = button.dataset;
-          const result = await swal.fire({
+          const defaultReason = 'Please review these changes again.';
+          swal.fire({
             input: 'text',
             title: `Resetting ${username}`,
-            inputPlaceholder: 'Provide a reason (or leave empty)...',
+            inputPlaceholder: defaultReason,
+            confirmButtonText: 'Reset',
+            confirmButtonColor: '#e40',
             showCancelButton: true,
+            showLoaderOnConfirm: true,
+            preConfirm: async reason => {
+              await postReview(requestId, `Resetting ${username}: ${reason || defaultReason}`);
+              // eslint-disable-next-line no-restricted-globals
+              location.reload();
+              await eus.sleep(100000); // Reload isn't blocking, so let's sleep while we wait for the page to reload.
+            },
           });
-          if (result.dismiss) return;
-
-          const reason = result.value.trim() || 'No reason specified.';
-          await postReview(requestId, `Resetting ${username}: ${reason}`);
-
-          // eslint-disable-next-line no-restricted-globals
-          location.reload();
         });
 
         // Annotate groups on the right.
