@@ -104,13 +104,18 @@
 
         const reviewRequest = await getReviewBoardRequest(requestId);
 
-        const userSpans = {};
+        const users = {};
         for (const user of reviewRequest.target_people) {
           const username = user.title;
           const span = document.createElement('span');
           span.href = user.href.replace('/api/', '/');
           span.innerText = `--${username}`;
-          userSpans[username] = span;
+          users[username] = {
+            user,
+            span,
+            vote: '',
+            class: '',
+          };
         }
 
         // Go through each user and record their approval.
@@ -120,7 +125,7 @@
 
           const username = review.links.user.title;
           const thread = document.querySelector(`.review[data-review-id="${review.id}"]`);
-          const span = userSpans[username];
+          const user = users[username];
           let threadLabel;
           let threadHeader;
 
@@ -128,39 +133,39 @@
             // Record the vote of a build user.
 
             if (prebuildThreads.length === 1) {
-              span.innerHTML = username;
+              user.innerHTML = username;
             }
 
             let match;
             const comment = review.body_top;
 
             if (comment.match(/going to check/)) {
-              span.innerHTML += ' 💬';
+              user.innerHTML += ' 💬';
               for (const element of prebuildThreads) {
                 element.classList.add('old');
               }
               prebuildThreads = [];
             // eslint-disable-next-line no-cond-assign
             } else if (match = comment.match(/successfully built the changes on (?<platform>[a-z]*)/i)) {
-              span.innerHTML += `<br> ⤷ ${match.groups.platform} ✅`;
+              user.span.innerHTML += `<br> ⤷ ${match.groups.platform} ✅`;
               threadLabel = '<label class="ship-it-label">Pass</label>';
               threadHeader = ` &mdash; ${match.groups.platform}`;
             // eslint-disable-next-line no-cond-assign
             } else if (match = comment.match(/^Build failed on (?<platform>[a-z]*)/i)) {
-              span.innerHTML += `<br> ⤷ ${match.groups.platform} ❌`;
+              user.span.innerHTML += `<br> ⤷ ${match.groups.platform} ❌`;
               threadLabel = '<label class="fix-it-label">Fail</label>';
               threadHeader = ` &mdash; ${match.groups.platform}`;
             } else if (comment.match(/fail/i)) {
-              span.innerHTML += '<br> ⤷ ❌';
+              user.span.innerHTML += '<br> ⤷ ❌';
               threadLabel = '<label class="fix-it-label">Fail</label>';
             } else {
-              span.innerHTML += '<br> ⤷ ❓';
+              user.span.innerHTML += '<br> ⤷ ❓';
             }
 
             prebuildThreads.push(thread);
           } else {
             // Record the vote of a non-build user.
-            span.innerHTML += review.ship_it ? ' ✅' : ' 💬';
+            user.innerHTML += review.ship_it ? ' ✅' : ' 💬';
           }
 
           // Annotate the review on the HTML page.
@@ -180,9 +185,9 @@
             rolesToUsers[role.toLowerCase()] = users.split(',');
           }
 
-          for (const username in userSpans) {
-            if (Object.prototype.hasOwnProperty.call(userSpans, username)) {
-              ownersHtml = ownersHtml.replace(username, userSpans[username].outerHTML);
+          for (const username in users) {
+            if (Object.prototype.hasOwnProperty.call(users, username)) {
+              ownersHtml = ownersHtml.replace(username, users[username].span.outerHTML);
             }
           }
 
@@ -191,11 +196,11 @@
         }
 
         // Annotate users on the right.
-        for (const username in userSpans) {
-          if (Object.prototype.hasOwnProperty.call(userSpans, username)) {
+        for (const username in users) {
+          if (Object.prototype.hasOwnProperty.call(users, username)) {
             const link = peopleField.querySelector(`a[href*="${username}"]`);
             link.innerText = '';
-            link.appendChild(userSpans[username]);
+            link.appendChild(users[username].span);
           }
         }
 
@@ -207,7 +212,7 @@
             .then(groupMembers => {
               const groupUrl = `/groups/${group.title}/`;
               for (const user of groupMembers.users) {
-                const vote = userSpans[user.username];
+                const vote = users[user.username].span;
                 if (!vote) continue;
                 for (const link of document.querySelectorAll(`#review_request a[href="${groupUrl}"]`)) {
                   link.insertAdjacentHTML('beforeend', `<br>⤷ ${user.outerHTML}${vote}`); // TODO: Test this may not work.
