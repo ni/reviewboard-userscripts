@@ -120,14 +120,13 @@
 
           const username = review.links.user.title;
           const userUrl = review.links.user.href.replace('https://review-board.natinst.com/api', '');
-          const userIsPrebuild = userUrl === '/users/prebuild/';
           const thread = document.querySelector(`.review[data-review-id="${review.id}"]`);
-          let threadLabel = null;
-          let threadHeader = null;
+          let threadLabel;
+          let threadHeader;
 
           const span = userSpans[username];
 
-          if (userIsPrebuild) {
+          if (username === 'prebuild') {
             // Record the vote of a build user.
 
             const comment = review.body_top;
@@ -160,10 +159,11 @@
             } else {
               span.innerHTML += '<br> ⤷ ❓';
             }
+
+            if (thread) prebuildThreads.push(thread);
           } else {
             // Record the vote of a non-build user.
-            const vote = review.ship_it ? ' ✅' : ' 💬';
-            span.innerHTML += vote;
+            span.innerHTML += review.ship_it ? ' ✅' : ' 💬';
           }
 
           // Annotate the review on the HTML page.
@@ -172,8 +172,6 @@
             if (threadLabel) thread.querySelector('.labels-container').insertAdjacentHTML('beforeend', threadLabel);
             if (threadHeader) thread.querySelector('.header a.user').insertAdjacentHTML('beforeend', threadHeader);
           }
-
-          if (userIsPrebuild) prebuildThreads.push(thread);
         }
 
         // Annotates the `.niconfig` owner review block with approvals.
