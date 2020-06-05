@@ -219,9 +219,22 @@
         }
 
         eus.globalSession.on(targetPeopleAndGroups, 'button.decline-button', 'click', async (event, button) => {
-          await postReview(requestId, `Declining: ${button.dataset.username}`);
+          event.preventDefault();
+
+          const username = button.dataset.username;
+
+          const result = await swal.fire({
+            input: 'text',
+            title: `Declining ${username}`,
+            inputPlaceholder: 'Provide a reason (or leave empty)...',
+            showCancelButton: true,
+          });
+          if (result.dismiss) return;
+
+          const reason = result.value.trim() || 'No reason specified.';
+          await postReview(requestId, `Declining **${username}**: ${reason}`);
+
           location.reload();
-          event.stopPropagation();
         });
 
         // Annotate groups on the right.
