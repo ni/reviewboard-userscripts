@@ -21,7 +21,7 @@
 /* global eus, swal */
 
 (function () {
-  eus.globalSession.onFirst(document, 'body', () => {
+  eus.globalSession.onFirst(document, 'body', async () => {
     eus.registerCssClassConfig(document.body, 'Select theme', 'theme', 'ni-light', {
       'ni-dark': 'Dark',
       'ni-middle': 'Middle',
@@ -74,6 +74,7 @@
           fileNameRow.append(link);
         });
       }
+
 
       // Annotate approval details on users and groups.
       eus.globalSession.onFirst(document, '#fieldset_reviewers_body', async (targetPeopleAndGroups) => {
@@ -213,8 +214,15 @@
             const link = peopleField.querySelector(`a[href*="${username}"]`);
             link.innerText = '';
             link.appendChild(users[username].span);
+            link.insertAdjacentHTML('afterBegin', `<button class="decline-button" data-username="${username}">X</button>`);
           }
         }
+
+        eus.globalSession.on(targetPeopleAndGroups, 'button.decline-button', 'click', async (event, button) => {
+          await postReview(requestId, `Declining: ${button.dataset.username}`);
+          location.reload();
+          event.stopPropagation();
+        });
 
         // Annotate groups on the right.
         // for (const group of reviewRequest.target_groups) {
@@ -334,6 +342,30 @@
       nextReviewsFetchUrl = reviewData.links.next ? reviewData.links.next.href : null;
       yield* reviewData.reviews;
     } while (nextReviewsFetchUrl);
+  }
+
+  async function postReview(requestId, markdown) {
+    const response = await fetch(`https://review-board.natinst.com/api/review-requests/${requestId}/reviews/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Accept: 'application/json',
+      },
+      body: toFormData({
+        api_format: 'json',
+        public: 1,
+        body_top: markdown,
+        body_top_text_type: 'markdown',
+      }),
+    });
+    // If the user submitting this review already has a pending draft review on this review request, then this will update the existing draft and return HTTP 303 See Other. Otherwise, this will create a new draft and return HTTP 201 Created. Either way, this request will return without a payload and with a Location header pointing to the location of the new draft review.
+    return response.json();
+  }
+
+  function toFormData(object) {
+    const data = new URLSearchParams();
+    Object.keys(object).forEach(key => data.set(key, object[key]));
+    return data;
   }
 
   GM_addStyle(/* css */ `
@@ -674,6 +706,11 @@
 
     a.user .declined {
       opacity: 0.2;
+    }
+    button.decline-button {
+      float: right;
+      padding: 1px 2px;
+      font-size: 100%;
     }
   `);
 }());
