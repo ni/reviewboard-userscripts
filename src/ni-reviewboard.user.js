@@ -21,7 +21,7 @@
 /* global eus, swal */
 
 (function () {
-  eus.globalSession.onFirst(document, 'body', async () => {
+  eus.globalSession.onFirst(document, 'body', () => {
     eus.registerCssClassConfig(document.body, 'Select theme', 'theme', 'ni-light', {
       'ni-dark': 'Dark',
       'ni-middle': 'Middle',
@@ -115,7 +115,7 @@
             info: user,
             span,
             vote: '',
-            details: ''
+            details: '',
           };
         }
 
@@ -168,10 +168,11 @@
             prebuildThreads.push(thread);
           } else {
             // Record the vote of a non-build user.
-            // eslint-disable-next-line no-cond-assign
+            // eslint-disable-next-line no-lonely-if, no-cond-assign
             if (match = comment.match(/^Declining\s+(?<username>[\w-_]+)\b/i)) {
               const declinedUser = users[match.groups.username];
               if (declinedUser) declinedUser.vote = '✖️';
+            // eslint-disable-next-line no-cond-assign
             } else if (match = comment.match(/^Resetting\s+(?<username>[\w-_]+)\b/i)) {
               const declinedUser = users[match.groups.username];
               if (declinedUser) declinedUser.vote = '';
@@ -187,7 +188,6 @@
         }
 
         for (const user of Object.values(users)) {
-          console.log(user);
           if (user.vote === '✖️') {
             user.span.classList.add('declined');
             user.span.innerHTML += `${user.info.title}${user.details}`;
@@ -230,7 +230,7 @@
         eus.globalSession.on(targetPeopleAndGroups, '.decline-button', 'click', async (event, button) => {
           event.preventDefault();
 
-          const username = button.dataset.username;
+          const { username } = button.dataset;
           const result = await swal.fire({
             input: 'text',
             title: `Declining ${username}`,
@@ -241,6 +241,8 @@
 
           const reason = result.value.trim() || 'No reason specified.';
           await postReview(requestId, `Declining ${username}: ${reason}`);
+
+          // eslint-disable-next-line no-restricted-globals
           location.reload();
         });
 
