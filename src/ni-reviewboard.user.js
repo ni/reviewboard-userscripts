@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         More Awesome NI Review Board
-// @version      1.8.2
+// @version      1.9.0
 // @namespace    https://www.ni.com
 // @author       Alejandro Barreto (National Instruments)
 // @license      MIT
@@ -101,6 +101,9 @@
         // Remove commas between names.
         removeImmediateInnerText(groupsField);
         removeImmediateInnerText(peopleField);
+
+        // Reword the label for "People" since we removed the "Reviewers" header.
+        document.querySelector('label[for=field_target_people]').innerText = 'Reviewers:';
 
         const reviewRequest = await getReviewBoardRequest(requestId);
 
@@ -492,7 +495,7 @@
     #accountnav:hover .user-nav-item { color: #000 !important; }
 
     /* Remove some useless header text in the review UI. */
-    #fieldset_info_head, label[for=field_description], label[for=field_summary] {
+    #fieldset_info_head, #fieldset_reviewers_head, label[for=field_description], label[for=field_summary] {
       display: none;
     }
 
