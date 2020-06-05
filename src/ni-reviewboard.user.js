@@ -109,11 +109,12 @@
           const username = user.title;
           const span = document.createElement('span');
           span.href = user.href.replace('/api/', '/');
-          span.innerText = `--${username}`;
           users[username] = {
-            user,
+            username,
+            info: user,
             span,
             vote: '',
+            details: '',
             class: '',
           };
         }
@@ -124,54 +125,67 @@
           if (!review.public) continue;
 
           const username = review.links.user.title;
-          const thread = document.querySelector(`.review[data-review-id="${review.id}"]`);
           const user = users[username];
+
+          const thread = document.querySelector(`.review[data-review-id="${review.id}"]`);
           let threadLabel;
           let threadHeader;
+
+          const comment = review.body_top;
+          let match;
 
           if (username === 'prebuild') {
             // Record the vote of a build user.
 
-            if (prebuildThreads.length === 1) {
-              user.innerHTML = username;
-            }
-
-            let match;
-            const comment = review.body_top;
-
             if (comment.match(/going to check/)) {
-              user.innerHTML += ' 💬';
+              user.vote = '💬';
+              user.details = '';
               for (const element of prebuildThreads) {
                 element.classList.add('old');
               }
               prebuildThreads = [];
             // eslint-disable-next-line no-cond-assign
             } else if (match = comment.match(/successfully built the changes on (?<platform>[a-z]*)/i)) {
-              user.span.innerHTML += `<br> ⤷ ${match.groups.platform} ✅`;
+              user.vote = '';
+              user.details += `<br> ⤷ ${match.groups.platform} ✅`;
               threadLabel = '<label class="ship-it-label">Pass</label>';
               threadHeader = ` &mdash; ${match.groups.platform}`;
             // eslint-disable-next-line no-cond-assign
             } else if (match = comment.match(/^Build failed on (?<platform>[a-z]*)/i)) {
-              user.span.innerHTML += `<br> ⤷ ${match.groups.platform} ❌`;
+              user.vote = '';
+              user.details += `<br> ⤷ ${match.groups.platform} ❌`;
               threadLabel = '<label class="fix-it-label">Fail</label>';
               threadHeader = ` &mdash; ${match.groups.platform}`;
             } else if (comment.match(/fail/i)) {
-              user.span.innerHTML += '<br> ⤷ ❌';
+              user.vote = '';
+              user.details += '<br> ⤷ ❌';
               threadLabel = '<label class="fix-it-label">Fail</label>';
             } else {
-              user.span.innerHTML += '<br> ⤷ ❓';
+              user.vote = '';
+              user.details += '<br> ⤷ ❓';
             }
 
             prebuildThreads.push(thread);
           } else {
             // Record the vote of a non-build user.
-            user.innerHTML += review.ship_it ? ' ✅' : ' 💬';
+            if (comment.match(/^I decline this review\./i)) {
+              user.vote = '💨';
+              user.class = 'declined';
+            } else {
+              user.vote = review.ship_it ? '✅' : '💬';
+            }
           }
 
           // Annotate the review on the HTML page.
           thread.classList.add(`users-${eus.toCss(username)}`);
           if (threadLabel) thread.querySelector('.labels-container').insertAdjacentHTML('beforeend', threadLabel);
           if (threadHeader) thread.querySelector('.header a.user').insertAdjacentHTML('beforeend', threadHeader);
+        }
+
+        for (const user of Object.values(users)) {
+          console.log(user);
+          if (user.class) user.span.classList.add(user.class);
+          user.span.innerHTML += `${user.info.title} ${user.vote}${user.details}`;
         }
 
         // Annotates the `.niconfig` owner review block with approvals.
@@ -181,14 +195,12 @@
 
           const rolesToUsers = {};
           for (const line of owners.innerText.split('\n').filter(l => l.match(/^\.niconfig/))) {
-            const [role, users] = line.replace('.niconfig', '').replace(/\s/gi, '').split(':', 2);
-            rolesToUsers[role.toLowerCase()] = users.split(',');
+            const [role, usersForTheRole] = line.replace('.niconfig', '').replace(/\s/gi, '').split(':', 2);
+            rolesToUsers[role.toLowerCase()] = usersForTheRole.split(',');
           }
 
-          for (const username in users) {
-            if (Object.prototype.hasOwnProperty.call(users, username)) {
-              ownersHtml = ownersHtml.replace(username, users[username].span.outerHTML);
-            }
+          for (const user of Object.values(users)) {
+            ownersHtml = ownersHtml.replace(user.username, user.span.outerHTML);
           }
 
           owners.innerHTML = ownersHtml;
@@ -205,21 +217,21 @@
         }
 
         // Annotate groups on the right.
-        for (const group of reviewRequest.target_groups) {
-          // Fetch each group in parallel.
-          fetch(`${group.href}/users/`)
-            .then(response => response.json())
-            .then(groupMembers => {
-              const groupUrl = `/groups/${group.title}/`;
-              for (const user of groupMembers.users) {
-                const vote = users[user.username].span;
-                if (!vote) continue;
-                for (const link of document.querySelectorAll(`#review_request a[href="${groupUrl}"]`)) {
-                  link.insertAdjacentHTML('beforeend', `<br>⤷ ${user.outerHTML}${vote}`); // TODO: Test this may not work.
-                }
-              }
-            });
-        }
+        // for (const group of reviewRequest.target_groups) {
+        //   // Fetch each group in parallel.
+        //   fetch(`${group.href}/users/`)
+        //     .then(response => response.json())
+        //     .then(groupMembers => {
+        //       const groupUrl = `/groups/${group.title}/`;
+        //       for (const user of groupMembers.users) {
+        //         const vote = users[user.username].span;
+        //         if (!vote) continue;
+        //         for (const link of document.querySelectorAll(`#review_request a[href="${groupUrl}"]`)) {
+        //           link.insertAdjacentHTML('beforeend', `<br>⤷ ${user.outerHTML}${vote}`); // TODO: Test this may not work.
+        //         }
+        //       }
+        //     });
+        // }
       });
     }
   });
@@ -659,5 +671,9 @@
 
     /* Fix a bug where the page does not use up all available page width. */
     #container { width: 100%; }
+
+    a.user .declined {
+      opacity: 0.2;
+    }
   `);
 }());
