@@ -220,7 +220,7 @@
           }
         }
 
-        eus.globalSession.on(targetPeopleAndGroups, '.user-action.decline', 'click', async (event, button) => {
+        eus.globalSession.on(targetPeopleAndGroups, '.user-action.decline', 'click', (event, button) => {
           event.preventDefault();
 
           const { username } = button.dataset;
@@ -242,7 +242,7 @@
           });
         });
 
-        eus.globalSession.on(targetPeopleAndGroups, '.user-action.reset', 'click', async (event, button) => {
+        eus.globalSession.on(targetPeopleAndGroups, '.user-action.reset', 'click', (event, button) => {
           event.preventDefault();
 
           const { username } = button.dataset;
