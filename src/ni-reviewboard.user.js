@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         More Awesome NI Review Board
-// @version      1.9.0
+// @version      1.10.0
 // @namespace    https://www.ni.com
 // @author       Alejandro Barreto (National Instruments)
 // @license      MIT
@@ -81,22 +81,19 @@
         const peopleField = document.getElementById('field_target_people');
 
         // The edit button copies the field element HTML text into a text box. Well, if we are modifying it, it'll be wrong when it gets copied into the text box. So let's reset it.
-        const originalGroupsText = groupsField.innerText;
-        eus.globalSession.onFirst(document, '#field_target_groups + a.editicon', link => {
+        const originalGroupsHtml = groupsField.innerHTML;
+        const originalPeopleHtml = peopleField.innerHTML;
+        eus.globalSession.onEveryNew(targetPeopleAndGroups, 'a.editicon', link => {
           link.addEventListener('click', () => {
-            groupsField.innerText = originalGroupsText;
-            eus.toast.fire({ title: 'When you are done modifying groups, refresh the page to re-annotate.' });
+            if (eus.addedClass(targetPeopleAndGroups, 'original-look')) {
+              groupsField.innerHTML = originalGroupsHtml;
+              peopleField.innerHTML = originalPeopleHtml;
+            }
           }, true); // capture=true to be the first to handle the click.
         });
 
-        // The edit button copies the field element HTML text into a text box. Well, if we are modifying it, it'll be wrong when it gets copied into the text box. So let's reset it.
-        const originalPeopleText = peopleField.innerText;
-        eus.globalSession.onFirst(document, '#field_target_people + a.editicon', link => {
-          link.addEventListener('click', () => {
-            peopleField.innerText = originalPeopleText;
-            eus.toast.fire({ title: 'When you are done modifying users, refresh the page to re-annotate.' });
-          }, true); // capture=true to be the first to handle the click.
-        });
+        // Tell the user to refresh once they've begun editing users or groups.
+        peopleField.insertAdjacentHTML('afterEnd', '<div class="refresh-page-notice">Refresh the page to re-annotate status.</div>');
 
         // Remove commas between names.
         removeImmediateInnerText(groupsField);
@@ -597,10 +594,23 @@
     }
 
     /* Make the groups & people listing a vertical list, one item per line. */
-    #fieldset_reviewers_body a {
+    #fieldset_reviewers_body:not(.original-look) a {
       display: block;
       line-height: 1.5em;
       margin-bottom: 10px;
+    }
+
+    /* Show a refresh page notice when the user is editing users/groups for the review request. */
+    #fieldset_reviewers_body .refresh-page-notice {
+      background: #fcc;
+      border-radius: 5px;
+      border: 1px solid #f88;
+      padding: 1ex 2ex;
+      margin: 2ex 0ex;
+      text-align: center;
+    }
+    #fieldset_reviewers_body:not(.original-look) .refresh-page-notice {
+      display: none;
     }
 
     /* Style the vote annotations we'll add to people and groups. */
