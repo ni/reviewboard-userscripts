@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         More Awesome NI Review Board
-// @version      1.7.0
+// @version      1.8.1
 // @namespace    https://www.ni.com
 // @author       Alejandro Barreto (National Instruments)
 // @license      MIT
@@ -102,121 +102,185 @@
         removeImmediateInnerText(groupsField);
         removeImmediateInnerText(peopleField);
 
+        const reviewRequest = await getReviewBoardRequest(requestId);
+
+        const users = {};
+        for (const user of reviewRequest.target_people) {
+          const username = user.title;
+          users[username] = {
+            username,
+            info: user,
+            span: document.createElement('span'),
+            vote: '',
+            details: '',
+          };
+        }
+
         // Go through each user and record their approval.
-        const userVotes = {};
-        let previousPrebuildReviewElements = [];
+        let prebuildThreads = [];
         for await (const review of getReviewBoardReviews(requestId)) {
           if (!review.public) continue;
 
-          const userUrl = review.links.user.href.replace('https://review-board.natinst.com/api', '');
-          const userIsPrebuild = userUrl === '/users/prebuild/';
-          const reviewElement = document.querySelector(`.review[data-review-id="${review.id}"]`);
-          let customReviewElementLabel = null;
-          let customReviewElementSubHeader = null;
+          const username = review.links.user.title;
+          const user = users[username];
 
-          if (userIsPrebuild) {
+          const thread = document.querySelector(`.review[data-review-id="${review.id}"]`);
+          let threadClass;
+          let threadLabel;
+          let threadSubtitle;
+
+          const comment = review.body_top;
+          let match;
+
+          if (username === 'prebuild') {
             // Record the vote of a build user.
 
-            const comment = review.body_top;
-            let match;
-            if (userVotes[userUrl] === ' 💬') {
-              userVotes[userUrl] = '';
+            if (comment.match(/going to check/)) {
+              user.vote = '🔨';
+              user.details = '';
+              for (const prebuildThread of prebuildThreads) {
+                prebuildThread.classList.add('old');
+              }
+              prebuildThreads = [];
+            // eslint-disable-next-line no-cond-assign
+            } else if (match = comment.match(/successfully built the changes on ([\w-_]*)/i)) {
+              const platform = match[1];
+              user.vote = '';
+              user.details += `<br> ⤷ ${platform} ✅`;
+              threadLabel = '<label class="ship-it-label">Pass</label>';
+              threadSubtitle = platform;
+            // eslint-disable-next-line no-cond-assign
+            } else if (match = comment.match(/^Build failed on ([\w-_]*)/i)) {
+              const platform = match[1];
+              user.vote = '';
+              user.details += `<br> ⤷ ${platform} ❌`;
+              threadLabel = '<label class="fix-it-label">Fail</label>';
+              threadSubtitle = platform;
+            } else if (comment.match(/fail/i)) {
+              user.vote = '';
+              user.details += '<br> ⤷ ❌';
+              threadLabel = '<label class="fix-it-label">Fail</label>';
+            } else {
+              user.vote = '';
+              user.details += '<br> ⤷ ❓';
             }
 
-            if (comment.match(/going to check/)) {
-              userVotes[userUrl] = ' 💬';
-              if (reviewElement) {
-                for (const element of previousPrebuildReviewElements) {
-                  element.classList.add('old');
-                }
-              }
-              previousPrebuildReviewElements = [];
-            // eslint-disable-next-line no-cond-assign
-            } else if (match = comment.match(/successfully built the changes on ([a-z]*)/i)) {
-              userVotes[userUrl] += `<br> ⤷ ${match[1]} ✅`;
-              customReviewElementLabel = '<label class="ship-it-label">Pass</label>';
-              customReviewElementSubHeader = ` &mdash; ${match[1]}`;
-            // eslint-disable-next-line no-cond-assign
-            } else if (match = comment.match(/^Build failed on ([a-z]*)/i)) {
-              userVotes[userUrl] += `<br> ⤷ ${match[1]} ❌`;
-              customReviewElementLabel = '<label class="fix-it-label">Fail</label>';
-              customReviewElementSubHeader = ` &mdash; ${match[1]}`;
-            } else if (comment.match(/fail/i)) {
-              userVotes[userUrl] += '<br> ⤷ <em>other</em> ❌';
-              customReviewElementLabel = '<label class="fix-it-label">Fail</label>';
-            } else {
-              userVotes[userUrl] += '<br> ⤷ ❓';
-            }
+            prebuildThreads.push(thread);
           } else {
             // Record the vote of a non-build user.
-            const vote = review.ship_it ? ' ✅' : ' 💬';
-            userVotes[userUrl] = vote;
+
+            // eslint-disable-next-line no-lonely-if, no-cond-assign
+            if (match = comment.match(/^Declining\s+([\w-_]+)\b/i)) {
+              const declinedUser = users[match[1]];
+              if (declinedUser) declinedUser.vote = '✖️';
+              threadClass = 'user-action';
+            // eslint-disable-next-line no-cond-assign
+            } else if (match = comment.match(/^Resetting\s+([\w-_]+)\b/i)) {
+              const resetUser = users[match[1]];
+              if (resetUser) resetUser.vote = '';
+              threadClass = 'user-action';
+            } else {
+              user.vote = review.ship_it ? '✅' : '💬';
+            }
           }
 
           // Annotate the review on the HTML page.
-          if (reviewElement) {
-            reviewElement.classList.add(eus.toCss(userUrl));
-            if (customReviewElementLabel) {
-              reviewElement.querySelector('.labels-container').insertAdjacentHTML('beforeend', customReviewElementLabel);
-            }
-            if (customReviewElementSubHeader) {
-              if (reviewElement) reviewElement.querySelector('.header a.user').insertAdjacentHTML('beforeend', customReviewElementSubHeader);
-            }
-          }
+          thread.classList.add(`users-${eus.toCss(username)}`);
+          if (threadClass) thread.classList.add(threadClass);
+          if (threadLabel) thread.querySelector('.labels-container').insertAdjacentHTML('beforeend', threadLabel);
+          if (threadSubtitle) thread.querySelector('.header a.user').insertAdjacentHTML('beforeend', ` &mdash; ${threadSubtitle}`);
+        }
 
-          if (userIsPrebuild) {
-            previousPrebuildReviewElements.push(reviewElement);
+        // Populate the span that has each user's name and vote.
+        for (const user of Object.values(users)) {
+          user.span.classList.add('user-status');
+          if (user.vote === '✖️') {
+            user.span.classList.add('declined');
+            user.span.innerHTML += `${user.username}${user.details}`;
+          } else {
+            user.span.innerHTML += `${user.username} ${user.vote}${user.details}`;
           }
         }
 
         // Annotates the `.niconfig` owner review block with approvals.
         const owners = document.querySelector('#field_beanbag_notefield_notes > p:last-child');
         if (owners && owners.innerText.includes('.niconfig Owners')) {
-          let ownersHtml = owners.innerHTML;
-
-          const ownersText = owners.innerText.split('\n').filter(l => l.match(/^\.niconfig/));
-          const rolesToUsers = {};
-          for (let line of ownersText) {
-            line = line.replace('.niconfig', '').replace(/\s/gi, '');
-            const [role, users] = line.split(':', 2);
-            rolesToUsers[role.toLowerCase()] = users.split(',');
-          }
-
-          for (const userUrl in userVotes) {
-            if (Object.prototype.hasOwnProperty.call(userVotes, userUrl)) {
-              const username = userUrl.replace('/users/', '').replace('/', '');
-              const annotation = username + userVotes[userUrl];
-              ownersHtml = ownersHtml.replace(username, annotation);
-            }
-          }
-
-          owners.innerHTML = ownersHtml;
+          owners.innerHTML = Object.values(users).reduce((html, user) => html.replace(new RegExp(`\\b${user.username}\\b`), user.span.outerHTML), owners.innerHTML);
           owners.classList.add('owner-info');
         }
 
         // Annotate users on the right.
-        for (const userUrl in userVotes) {
-          if (Object.prototype.hasOwnProperty.call(userVotes, userUrl)) {
-            for (const link of document.querySelectorAll(`#review_request a[href="${userUrl}"]`)) {
-              link.insertAdjacentHTML('beforeend', userVotes[userUrl]);
+        for (const user of Object.values(users)) {
+          const link = peopleField.querySelector(`a[href*="${user.username}"]`);
+          link.innerText = '';
+          link.appendChild(user.span);
+          if (user.username !== 'prebuild') {
+            if (user.vote !== '✖️') {
+              link.insertAdjacentHTML('afterBegin', `<button class="user-action decline" data-username="${user.username}">🗙</button>`);
             }
+            link.insertAdjacentHTML('afterBegin', `<button class="user-action reset" data-username="${user.username}">⭮</button>`);
           }
         }
 
+        // Handle clicks to reviewer decline buttons.
+        eus.globalSession.on(targetPeopleAndGroups, '.user-action.decline', 'click', (event, button) => {
+          event.preventDefault();
+
+          const { username } = button.dataset;
+          const defaultReason = 'Not needed for these changes.';
+          swal.fire({
+            input: 'text',
+            title: `Declining ${username}`,
+            text: 'They will be crossed out in the list but will still receive emails. Optional decline reason:',
+            inputPlaceholder: defaultReason,
+            confirmButtonText: 'Decline',
+            confirmButtonColor: '#e40',
+            showCancelButton: true,
+            showLoaderOnConfirm: true,
+            preConfirm: async reason => {
+              await postReview(requestId, `Declining ${username}: ${reason || defaultReason}`);
+              // eslint-disable-next-line no-restricted-globals
+              location.reload();
+              await eus.sleep(100000); // Reload isn't blocking, so let's sleep while we wait for the page to reload.
+            },
+          });
+        });
+
+        // Handle clicks to reviewer reset buttons.
+        eus.globalSession.on(targetPeopleAndGroups, '.user-action.reset', 'click', (event, button) => {
+          event.preventDefault();
+
+          const { username } = button.dataset;
+          const defaultReason = 'Please review these changes again.';
+          swal.fire({
+            input: 'text',
+            title: `Resetting ${username}`,
+            text: 'Their status will be reset and they will receive an email. Optional reset reason:',
+            inputPlaceholder: defaultReason,
+            confirmButtonText: 'Reset',
+            confirmButtonColor: '#e40',
+            showCancelButton: true,
+            showLoaderOnConfirm: true,
+            preConfirm: async reason => {
+              await postReview(requestId, `Resetting ${username}: ${reason || defaultReason}`);
+              // eslint-disable-next-line no-restricted-globals
+              location.reload();
+              await eus.sleep(100000); // Reload isn't blocking, so let's sleep while we wait for the page to reload.
+            },
+          });
+        });
+
         // Annotate groups on the right.
-        const reviewRequest = await getReviewBoardRequest(requestId);
         for (const group of reviewRequest.target_groups) {
           // Fetch each group in parallel.
           fetch(`${group.href}/users/`)
             .then(response => response.json())
             .then(groupMembers => {
               const groupUrl = `/groups/${group.title}/`;
-              for (const user of groupMembers.users) {
-                const vote = userVotes[user.url];
-                if (!vote) continue;
-                for (const link of document.querySelectorAll(`#review_request a[href="${groupUrl}"]`)) {
-                  link.insertAdjacentHTML('beforeend', `<br>⤷ ${user.username}${vote}`);
-                }
+              const link = groupsField.querySelector(`a[href="${groupUrl}"]`);
+              for (const groupMember of groupMembers.users) {
+                const user = users[groupMember.username];
+                if (user) link.insertAdjacentHTML('beforeend', `<br>⤷ ${user.span.outerHTML}`);
               }
             });
         }
@@ -322,6 +386,30 @@
       nextReviewsFetchUrl = reviewData.links.next ? reviewData.links.next.href : null;
       yield* reviewData.reviews;
     } while (nextReviewsFetchUrl);
+  }
+
+  async function postReview(requestId, markdown) {
+    const response = await fetch(`https://review-board.natinst.com/api/review-requests/${requestId}/reviews/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Accept: 'application/json',
+      },
+      body: toFormData({
+        api_format: 'json',
+        public: 1,
+        body_top: markdown,
+        body_top_text_type: 'markdown',
+      }),
+    });
+    // If the user submitting this review already has a pending draft review on this review request, then this will update the existing draft and return HTTP 303 See Other. Otherwise, this will create a new draft and return HTTP 201 Created. Either way, this request will return without a payload and with a Location header pointing to the location of the new draft review.
+    return response.json();
+  }
+
+  function toFormData(object) {
+    const data = new URLSearchParams();
+    Object.keys(object).forEach(key => data.set(key, object[key]));
+    return data;
   }
 
   GM_addStyle(/* css */ `
@@ -646,7 +734,7 @@
     /* Color user comments differently. */
     .review .header { background: #ccf; }
     .changedesc .header { background: #eee; }
-    .review.users-prebuild .header { background: #eee; }
+    .review.users-prebuild .header, .review.user-action .header { background: #eee; }
     .review.users-prebuild.old { opacity: 0.3; }
 
     /* Support reordering the review feed newest-first. */
@@ -660,5 +748,34 @@
 
     /* Fix a bug where the page does not use up all available page width. */
     #container { width: 100%; }
+
+    /* Style a decline and reset button for reviewers. */
+    #field_target_people {
+      max-width: initial !important;
+      width: 100%;
+    }
+    .user-status.declined {
+      opacity: 0.35;
+      text-decoration: line-through;
+    }
+    button.user-action {
+      float: right;
+      padding: 0px 5px;
+      margin: 0px 2px;
+      font-size: 115%;
+      opacity: 0.15;
+      transition: 0.2s;
+      border: none;
+      background: none;
+      border-radius: 3px;
+    }
+    #field_target_people:hover button.user-action {
+      opacity: 0.8;
+    }
+    button.user-action:hover {
+      cursor: pointer;
+      opacity: 1.0;
+      background: #ddd;
+    }
   `);
 }());
