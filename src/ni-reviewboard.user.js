@@ -126,6 +126,7 @@
           const user = users[username];
 
           const thread = document.querySelector(`.review[data-review-id="${review.id}"]`);
+          let threadClass;
           let threadLabel;
           let threadSubtitle;
 
@@ -171,10 +172,12 @@
             if (match = comment.match(/^Declining\s+(?<username>[\w-_]+)\b/i)) {
               const declinedUser = users[match.groups.username];
               if (declinedUser) declinedUser.vote = '✖️';
+              threadClass = 'user-action';
             // eslint-disable-next-line no-cond-assign
             } else if (match = comment.match(/^Resetting\s+(?<username>[\w-_]+)\b/i)) {
-              const declinedUser = users[match.groups.username];
-              if (declinedUser) declinedUser.vote = '';
+              const resetUser = users[match.groups.username];
+              if (resetUser) resetUser.vote = '';
+              threadClass = 'user-action';
             } else {
               user.vote = review.ship_it ? '✅' : '💬';
             }
@@ -182,6 +185,7 @@
 
           // Annotate the review on the HTML page.
           thread.classList.add(`users-${eus.toCss(username)}`);
+          if (threadClass) thread.classList.add(threadClass);
           if (threadLabel) thread.querySelector('.labels-container').insertAdjacentHTML('beforeend', threadLabel);
           if (threadSubtitle) thread.querySelector('.header a.user').insertAdjacentHTML('beforeend', ` &mdash; ${threadSubtitle}`);
         }
@@ -255,21 +259,19 @@
         });
 
         // Annotate groups on the right.
-        // for (const group of reviewRequest.target_groups) {
-        //   // Fetch each group in parallel.
-        //   fetch(`${group.href}/users/`)
-        //     .then(response => response.json())
-        //     .then(groupMembers => {
-        //       const groupUrl = `/groups/${group.title}/`;
-        //       for (const user of groupMembers.users) {
-        //         const vote = users[user.username].span;
-        //         if (!vote) continue;
-        //         for (const link of document.querySelectorAll(`#review_request a[href="${groupUrl}"]`)) {
-        //           link.insertAdjacentHTML('beforeend', `<br>⤷ ${user.outerHTML}${vote}`); // TODO: Test this may not work.
-        //         }
-        //       }
-        //     });
-        // }
+        for (const group of reviewRequest.target_groups) {
+          // Fetch each group in parallel.
+          fetch(`${group.href}/users/`)
+            .then(response => response.json())
+            .then(groupMembers => {
+              const groupUrl = `/groups/${group.title}/`;
+              const link = groupsField.querySelector(`a[href="${groupUrl}"]`);
+              for (const groupMember of groupMembers.users) {
+                const user = users[groupMember.username];
+                if (user) link.insertAdjacentHTML('beforeend', `<br>⤷ ${user.span.outerHTML}`);
+              }
+            });
+        }
       });
     }
   });
@@ -719,7 +721,7 @@
     /* Color user comments differently. */
     .review .header { background: #ccf; }
     .changedesc .header { background: #eee; }
-    .review.users-prebuild .header { background: #eee; }
+    .review.users-prebuild .header, .review.user-action .header { background: #eee; }
     .review.users-prebuild.old { opacity: 0.3; }
 
     /* Support reordering the review feed newest-first. */
