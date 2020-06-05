@@ -119,28 +119,25 @@
           if (!review.public) continue;
 
           const username = review.links.user.title;
-          const userUrl = review.links.user.href.replace('https://review-board.natinst.com/api', '');
           const thread = document.querySelector(`.review[data-review-id="${review.id}"]`);
+          const span = userSpans[username];
           let threadLabel;
           let threadHeader;
-
-          const span = userSpans[username];
 
           if (username === 'prebuild') {
             // Record the vote of a build user.
 
-            const comment = review.body_top;
-            let match;
-            if (span.innerHTML === ' 💬') {
+            if (prebuildThreads.length === 1) {
               span.innerHTML = username;
             }
 
+            let match;
+            const comment = review.body_top;
+
             if (comment.match(/going to check/)) {
               span.innerHTML += ' 💬';
-              if (thread) {
-                for (const element of prebuildThreads) {
-                  element.classList.add('old');
-                }
+              for (const element of prebuildThreads) {
+                element.classList.add('old');
               }
               prebuildThreads = [];
             // eslint-disable-next-line no-cond-assign
@@ -160,18 +157,16 @@
               span.innerHTML += '<br> ⤷ ❓';
             }
 
-            if (thread) prebuildThreads.push(thread);
+            prebuildThreads.push(thread);
           } else {
             // Record the vote of a non-build user.
             span.innerHTML += review.ship_it ? ' ✅' : ' 💬';
           }
 
           // Annotate the review on the HTML page.
-          if (thread) {
-            thread.classList.add(eus.toCss(userUrl));
-            if (threadLabel) thread.querySelector('.labels-container').insertAdjacentHTML('beforeend', threadLabel);
-            if (threadHeader) thread.querySelector('.header a.user').insertAdjacentHTML('beforeend', threadHeader);
-          }
+          thread.classList.add(`users-${eus.toCss(username)}`);
+          if (threadLabel) thread.querySelector('.labels-container').insertAdjacentHTML('beforeend', threadLabel);
+          if (threadHeader) thread.querySelector('.header a.user').insertAdjacentHTML('beforeend', threadHeader);
         }
 
         // Annotates the `.niconfig` owner review block with approvals.
@@ -179,9 +174,8 @@
         if (owners && owners.innerText.includes('.niconfig Owners')) {
           let ownersHtml = owners.innerHTML;
 
-          const ownersText = owners.innerText.split('\n').filter(l => l.match(/^\.niconfig/));
           const rolesToUsers = {};
-          for (const line of ownersText) {
+          for (const line of owners.innerText.split('\n').filter(l => l.match(/^\.niconfig/))) {
             const [role, users] = line.replace('.niconfig', '').replace(/\s/gi, '').split(':', 2);
             rolesToUsers[role.toLowerCase()] = users.split(',');
           }
