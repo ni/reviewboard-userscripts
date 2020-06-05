@@ -109,7 +109,7 @@
         for (const user of reviewRequest.target_people) {
           const username = user.title;
           const span = document.createElement('span');
-          span.href = user.href.replace('/api/', '/');
+          span.classList.add('user-status');
           users[username] = {
             username,
             info: user,
@@ -170,7 +170,7 @@
           } else {
             // Record the vote of a non-build user.
             if (comment.match(/^I decline this review\./i)) {
-              user.vote = '💨';
+              user.vote = '';
               user.class = 'declined';
             } else {
               user.vote = review.ship_it ? '✅' : '💬';
@@ -214,11 +214,13 @@
             const link = peopleField.querySelector(`a[href*="${username}"]`);
             link.innerText = '';
             link.appendChild(users[username].span);
-            link.insertAdjacentHTML('afterBegin', `<button class="decline-button" data-username="${username}">X</button>`);
+            if (username !== 'prebuild') {
+              link.insertAdjacentHTML('afterBegin', `<button class="decline-button" data-username="${username}">✖️</button>`);
+            }
           }
         }
 
-        eus.globalSession.on(targetPeopleAndGroups, 'button.decline-button', 'click', async (event, button) => {
+        eus.globalSession.on(targetPeopleAndGroups, '.decline-button', 'click', async (event, button) => {
           event.preventDefault();
 
           const username = button.dataset.username;
@@ -717,13 +719,25 @@
     /* Fix a bug where the page does not use up all available page width. */
     #container { width: 100%; }
 
-    a.user .declined {
-      opacity: 0.2;
+    #field_target_people {
+      max-width: initial !important;
+      width: 100%;
     }
-    button.decline-button {
+    .user-status.declined {
+      opacity: 0.35;
+      text-decoration: line-through;
+    }
+    .decline-button {
       float: right;
-      padding: 1px 2px;
+      padding: 2px 5px;
       font-size: 100%;
+      opacity: 0;
+      transition: 0.2s;
+      border: none;
+      background: none;
+    }
+    #field_target_people:hover .decline-button {
+      opacity: 0.8;
     }
   `);
 }());
