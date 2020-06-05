@@ -192,13 +192,14 @@
           if (threadSubtitle) thread.querySelector('.header a.user').insertAdjacentHTML('beforeend', ` &mdash; ${threadSubtitle}`);
         }
 
+        // Populate the span that has each user's name and vote.
         for (const user of Object.values(users)) {
           user.span.classList.add('user-status');
           if (user.vote === '✖️') {
             user.span.classList.add('declined');
-            user.span.innerHTML += `${user.info.title}${user.details}`;
+            user.span.innerHTML += `${user.username}${user.details}`;
           } else {
-            user.span.innerHTML += `${user.info.title} ${user.vote}${user.details}`;
+            user.span.innerHTML += `${user.username} ${user.vote}${user.details}`;
           }
         }
 
@@ -222,6 +223,7 @@
           }
         }
 
+        // Handle clicks to reviewer decline buttons.
         eus.globalSession.on(targetPeopleAndGroups, '.user-action.decline', 'click', (event, button) => {
           event.preventDefault();
 
@@ -244,6 +246,7 @@
           });
         });
 
+        // Handle clicks to reviewer reset buttons.
         eus.globalSession.on(targetPeopleAndGroups, '.user-action.reset', 'click', (event, button) => {
           event.preventDefault();
 
