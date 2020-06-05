@@ -115,8 +115,7 @@
             info: user,
             span,
             vote: '',
-            details: '',
-            class: '',
+            details: ''
           };
         }
 
@@ -130,7 +129,7 @@
 
           const thread = document.querySelector(`.review[data-review-id="${review.id}"]`);
           let threadLabel;
-          let threadHeader;
+          let threadSubtitle;
 
           const comment = review.body_top;
           let match;
@@ -139,24 +138,24 @@
             // Record the vote of a build user.
 
             if (comment.match(/going to check/)) {
-              user.vote = '💬';
+              user.vote = '🔨';
               user.details = '';
               for (const element of prebuildThreads) {
                 element.classList.add('old');
               }
               prebuildThreads = [];
             // eslint-disable-next-line no-cond-assign
-            } else if (match = comment.match(/successfully built the changes on (?<platform>[a-z]*)/i)) {
+            } else if (match = comment.match(/successfully built the changes on (?<platform>[\w-_]*)/i)) {
               user.vote = '';
               user.details += `<br> ⤷ ${match.groups.platform} ✅`;
               threadLabel = '<label class="ship-it-label">Pass</label>';
-              threadHeader = ` &mdash; ${match.groups.platform}`;
+              threadSubtitle = match.groups.platform;
             // eslint-disable-next-line no-cond-assign
-            } else if (match = comment.match(/^Build failed on (?<platform>[a-z]*)/i)) {
+            } else if (match = comment.match(/^Build failed on (?<platform>[\w-_]*)/i)) {
               user.vote = '';
               user.details += `<br> ⤷ ${match.groups.platform} ❌`;
               threadLabel = '<label class="fix-it-label">Fail</label>';
-              threadHeader = ` &mdash; ${match.groups.platform}`;
+              threadSubtitle = match.groups.platform;
             } else if (comment.match(/fail/i)) {
               user.vote = '';
               user.details += '<br> ⤷ ❌';
@@ -169,9 +168,13 @@
             prebuildThreads.push(thread);
           } else {
             // Record the vote of a non-build user.
-            if (comment.match(/^I decline this review\./i)) {
-              user.vote = '';
-              user.class = 'declined';
+            // eslint-disable-next-line no-cond-assign
+            if (match = comment.match(/^Declining\s+(?<username>[\w-_]+)\b/i)) {
+              const declinedUser = users[match.groups.username];
+              if (declinedUser) declinedUser.vote = '✖️';
+            } else if (match = comment.match(/^Resetting\s+(?<username>[\w-_]+)\b/i)) {
+              const declinedUser = users[match.groups.username];
+              if (declinedUser) declinedUser.vote = '';
             } else {
               user.vote = review.ship_it ? '✅' : '💬';
             }
@@ -180,12 +183,12 @@
           // Annotate the review on the HTML page.
           thread.classList.add(`users-${eus.toCss(username)}`);
           if (threadLabel) thread.querySelector('.labels-container').insertAdjacentHTML('beforeend', threadLabel);
-          if (threadHeader) thread.querySelector('.header a.user').insertAdjacentHTML('beforeend', threadHeader);
+          if (threadSubtitle) thread.querySelector('.header a.user').insertAdjacentHTML('beforeend', ` &mdash; ${threadSubtitle}`);
         }
 
         for (const user of Object.values(users)) {
           console.log(user);
-          if (user.class) user.span.classList.add(user.class);
+          if (user.vote === '✖️') user.span.classList.add('declined');
           user.span.innerHTML += `${user.info.title} ${user.vote}${user.details}`;
         }
 
@@ -224,7 +227,6 @@
           event.preventDefault();
 
           const username = button.dataset.username;
-
           const result = await swal.fire({
             input: 'text',
             title: `Declining ${username}`,
@@ -234,8 +236,7 @@
           if (result.dismiss) return;
 
           const reason = result.value.trim() || 'No reason specified.';
-          await postReview(requestId, `Declining **${username}**: ${reason}`);
-
+          await postReview(requestId, `Declining ${username}: ${reason}`);
           location.reload();
         });
 
@@ -719,6 +720,7 @@
     /* Fix a bug where the page does not use up all available page width. */
     #container { width: 100%; }
 
+    /* Style a decline button for reviewers. */
     #field_target_people {
       max-width: initial !important;
       width: 100%;
