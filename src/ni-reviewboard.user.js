@@ -144,17 +144,19 @@
               }
               prebuildThreads = [];
             // eslint-disable-next-line no-cond-assign
-            } else if (match = comment.match(/successfully built the changes on (?<platform>[\w-_]*)/i)) {
+            } else if (match = comment.match(/successfully built the changes on ([\w-_]*)/i)) {
+              const platform = match[1];
               user.vote = '';
-              user.details += `<br> ⤷ ${match.groups.platform} ✅`;
+              user.details += `<br> ⤷ ${platform} ✅`;
               threadLabel = '<label class="ship-it-label">Pass</label>';
-              threadSubtitle = match.groups.platform;
+              threadSubtitle = platform;
             // eslint-disable-next-line no-cond-assign
-            } else if (match = comment.match(/^Build failed on (?<platform>[\w-_]*)/i)) {
+            } else if (match = comment.match(/^Build failed on ([\w-_]*)/i)) {
+              const platform = match[1];
               user.vote = '';
-              user.details += `<br> ⤷ ${match.groups.platform} ❌`;
+              user.details += `<br> ⤷ ${platform} ❌`;
               threadLabel = '<label class="fix-it-label">Fail</label>';
-              threadSubtitle = match.groups.platform;
+              threadSubtitle = platform;
             } else if (comment.match(/fail/i)) {
               user.vote = '';
               user.details += '<br> ⤷ ❌';
@@ -169,13 +171,13 @@
             // Record the vote of a non-build user.
 
             // eslint-disable-next-line no-lonely-if, no-cond-assign
-            if (match = comment.match(/^Declining\s+(?<username>[\w-_]+)\b/i)) {
-              const declinedUser = users[match.groups.username];
+            if (match = comment.match(/^Declining\s+([\w-_]+)\b/i)) {
+              const declinedUser = users[match[1]];
               if (declinedUser) declinedUser.vote = '✖️';
               threadClass = 'user-action';
             // eslint-disable-next-line no-cond-assign
-            } else if (match = comment.match(/^Resetting\s+(?<username>[\w-_]+)\b/i)) {
-              const resetUser = users[match.groups.username];
+            } else if (match = comment.match(/^Resetting\s+([\w-_]+)\b/i)) {
+              const resetUser = users[match[1]];
               if (resetUser) resetUser.vote = '';
               threadClass = 'user-action';
             } else {
