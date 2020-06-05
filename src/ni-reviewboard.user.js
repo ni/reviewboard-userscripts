@@ -108,12 +108,10 @@
         const users = {};
         for (const user of reviewRequest.target_people) {
           const username = user.title;
-          const span = document.createElement('span');
-          span.classList.add('user-status');
           users[username] = {
             username,
             info: user,
-            span,
+            span: document.createElement('span'),
             vote: '',
             details: '',
           };
@@ -168,6 +166,7 @@
             prebuildThreads.push(thread);
           } else {
             // Record the vote of a non-build user.
+
             // eslint-disable-next-line no-lonely-if, no-cond-assign
             if (match = comment.match(/^Declining\s+(?<username>[\w-_]+)\b/i)) {
               const declinedUser = users[match.groups.username];
@@ -188,6 +187,7 @@
         }
 
         for (const user of Object.values(users)) {
+          user.span.classList.add('user-status');
           if (user.vote === '✖️') {
             user.span.classList.add('declined');
             user.span.innerHTML += `${user.info.title}${user.details}`;
@@ -199,35 +199,24 @@
         // Annotates the `.niconfig` owner review block with approvals.
         const owners = document.querySelector('#field_beanbag_notefield_notes > p:last-child');
         if (owners && owners.innerText.includes('.niconfig Owners')) {
-          let ownersHtml = owners.innerHTML;
-
-          const rolesToUsers = {};
-          for (const line of owners.innerText.split('\n').filter(l => l.match(/^\.niconfig/))) {
-            const [role, usersForTheRole] = line.replace('.niconfig', '').replace(/\s/gi, '').split(':', 2);
-            rolesToUsers[role.toLowerCase()] = usersForTheRole.split(',');
-          }
-
-          for (const user of Object.values(users)) {
-            ownersHtml = ownersHtml.replace(user.username, user.span.outerHTML);
-          }
-
-          owners.innerHTML = ownersHtml;
+          owners.innerHTML = Object.values(users).reduce((html, user) => html.replace(new RegExp(`\\b${user.username}\\b`), user.span.outerHTML), owners.innerHTML);
           owners.classList.add('owner-info');
         }
 
         // Annotate users on the right.
-        for (const username in users) {
-          if (Object.prototype.hasOwnProperty.call(users, username)) {
-            const link = peopleField.querySelector(`a[href*="${username}"]`);
-            link.innerText = '';
-            link.appendChild(users[username].span);
-            if (username !== 'prebuild') {
-              link.insertAdjacentHTML('afterBegin', `<button class="decline-button" data-username="${username}">✖️</button>`);
+        for (const user of Object.values(users)) {
+          const link = peopleField.querySelector(`a[href*="${user.username}"]`);
+          link.innerText = '';
+          link.appendChild(user.span);
+          if (user.username !== 'prebuild') {
+            if (user.vote !== '✖️') {
+              link.insertAdjacentHTML('afterBegin', `<button class="user-action decline" data-username="${user.username}">🗙</button>`);
             }
+            link.insertAdjacentHTML('afterBegin', `<button class="user-action reset" data-username="${user.username}">⭮</button>`);
           }
         }
 
-        eus.globalSession.on(targetPeopleAndGroups, '.decline-button', 'click', async (event, button) => {
+        eus.globalSession.on(targetPeopleAndGroups, '.user-action.decline', 'click', async (event, button) => {
           event.preventDefault();
 
           const { username } = button.dataset;
@@ -241,6 +230,25 @@
 
           const reason = result.value.trim() || 'No reason specified.';
           await postReview(requestId, `Declining ${username}: ${reason}`);
+
+          // eslint-disable-next-line no-restricted-globals
+          location.reload();
+        });
+
+        eus.globalSession.on(targetPeopleAndGroups, '.user-action.reset', 'click', async (event, button) => {
+          event.preventDefault();
+
+          const { username } = button.dataset;
+          const result = await swal.fire({
+            input: 'text',
+            title: `Resetting ${username}`,
+            inputPlaceholder: 'Provide a reason (or leave empty)...',
+            showCancelButton: true,
+          });
+          if (result.dismiss) return;
+
+          const reason = result.value.trim() || 'No reason specified.';
+          await postReview(requestId, `Resetting ${username}: ${reason}`);
 
           // eslint-disable-next-line no-restricted-globals
           location.reload();
@@ -726,7 +734,7 @@
     /* Fix a bug where the page does not use up all available page width. */
     #container { width: 100%; }
 
-    /* Style a decline button for reviewers. */
+    /* Style a decline and reset button for reviewers. */
     #field_target_people {
       max-width: initial !important;
       width: 100%;
@@ -735,17 +743,24 @@
       opacity: 0.35;
       text-decoration: line-through;
     }
-    .decline-button {
+    button.user-action {
       float: right;
-      padding: 2px 5px;
-      font-size: 100%;
+      padding: 0px 5px;
+      margin: 0px 2px;
+      font-size: 115%;
       opacity: 0.15;
       transition: 0.2s;
       border: none;
       background: none;
+      border-radius: 3px;
     }
-    #field_target_people:hover .decline-button {
+    #field_target_people:hover button.user-action {
       opacity: 0.8;
+    }
+    button.user-action:hover {
+      cursor: pointer;
+      opacity: 1.0;
+      background: #ddd;
     }
   `);
 }());
