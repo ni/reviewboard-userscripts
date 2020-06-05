@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         More Awesome NI Review Board
-// @version      1.10.0
+// @version      1.10.1
 // @namespace    https://www.ni.com
 // @author       Alejandro Barreto (National Instruments)
 // @license      MIT
@@ -50,7 +50,7 @@
     });
 
     // Let you click anywhere in the header to expand/collapse a comment.
-    eus.globalSession.on(document, '.header', 'click', (event, header) => {
+    eus.globalSession.on(document, '#reviews .header', 'click', (event, header) => {
       const clickedOnButton = event.target.closest('.collapse-button');
       if (clickedOnButton) return;
       header.querySelector('.collapse-button').click();
