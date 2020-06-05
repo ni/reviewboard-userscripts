@@ -188,8 +188,12 @@
 
         for (const user of Object.values(users)) {
           console.log(user);
-          if (user.vote === '✖️') user.span.classList.add('declined');
-          user.span.innerHTML += `${user.info.title} ${user.vote}${user.details}`;
+          if (user.vote === '✖️') {
+            user.span.classList.add('declined');
+            user.span.innerHTML += `${user.info.title}${user.details}`;
+          } else {
+            user.span.innerHTML += `${user.info.title} ${user.vote}${user.details}`;
+          }
         }
 
         // Annotates the `.niconfig` owner review block with approvals.
@@ -733,7 +737,7 @@
       float: right;
       padding: 2px 5px;
       font-size: 100%;
-      opacity: 0;
+      opacity: 0.15;
       transition: 0.2s;
       border: none;
       background: none;
