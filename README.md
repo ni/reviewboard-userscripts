@@ -14,7 +14,7 @@ Primarily for use at NI. If you also use Review Board, it is possible that this 
 ### Neat new features!
 
 - Categories reviews into Incomplete, Reviewed, and Ship It groups
-- Buttons to decline themselves and others if they are on vacation or unnecessary on the review.
+- Buttons to decline themselves and others if they are on vacation or unnecessary on the review
 - Buttons to get reset on a review (aka. re-added or "please see these changes again")
 - Adds an icon to navigate to file from its diff
 - Lets you click anywhere in the header to expand/collapse a comment
