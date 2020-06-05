@@ -102,71 +102,78 @@
         removeImmediateInnerText(groupsField);
         removeImmediateInnerText(peopleField);
 
+        const reviewRequest = await getReviewBoardRequest(requestId);
+
+        const userSpans = {};
+        for (const user of reviewRequest.target_people) {
+          const username = user.title;
+          const span = document.createElement('span');
+          span.href = user.href.replace('/api/', '/');
+          span.innerText = `--${username}`;
+          userSpans[username] = span;
+        }
+
         // Go through each user and record their approval.
-        const userVotes = {};
-        let previousPrebuildReviewElements = [];
+        let prebuildThreads = [];
         for await (const review of getReviewBoardReviews(requestId)) {
           if (!review.public) continue;
 
+          const username = review.links.user.title;
           const userUrl = review.links.user.href.replace('https://review-board.natinst.com/api', '');
           const userIsPrebuild = userUrl === '/users/prebuild/';
-          const reviewElement = document.querySelector(`.review[data-review-id="${review.id}"]`);
-          let customReviewElementLabel = null;
-          let customReviewElementSubHeader = null;
+          const thread = document.querySelector(`.review[data-review-id="${review.id}"]`);
+          let threadLabel = null;
+          let threadHeader = null;
+
+          const span = userSpans[username];
 
           if (userIsPrebuild) {
             // Record the vote of a build user.
 
             const comment = review.body_top;
             let match;
-            if (userVotes[userUrl] === ' 💬') {
-              userVotes[userUrl] = '';
+            if (span.innerHTML === ' 💬') {
+              span.innerHTML = username;
             }
 
             if (comment.match(/going to check/)) {
-              userVotes[userUrl] = ' 💬';
-              if (reviewElement) {
-                for (const element of previousPrebuildReviewElements) {
+              span.innerHTML += ' 💬';
+              if (thread) {
+                for (const element of prebuildThreads) {
                   element.classList.add('old');
                 }
               }
-              previousPrebuildReviewElements = [];
+              prebuildThreads = [];
             // eslint-disable-next-line no-cond-assign
-            } else if (match = comment.match(/successfully built the changes on ([a-z]*)/i)) {
-              userVotes[userUrl] += `<br> ⤷ ${match[1]} ✅`;
-              customReviewElementLabel = '<label class="ship-it-label">Pass</label>';
-              customReviewElementSubHeader = ` &mdash; ${match[1]}`;
+            } else if (match = comment.match(/successfully built the changes on (?<platform>[a-z]*)/i)) {
+              span.innerHTML += `<br> ⤷ ${match.groups.platform} ✅`;
+              threadLabel = '<label class="ship-it-label">Pass</label>';
+              threadHeader = ` &mdash; ${match.groups.platform}`;
             // eslint-disable-next-line no-cond-assign
-            } else if (match = comment.match(/^Build failed on ([a-z]*)/i)) {
-              userVotes[userUrl] += `<br> ⤷ ${match[1]} ❌`;
-              customReviewElementLabel = '<label class="fix-it-label">Fail</label>';
-              customReviewElementSubHeader = ` &mdash; ${match[1]}`;
+            } else if (match = comment.match(/^Build failed on (?<platform>[a-z]*)/i)) {
+              span.innerHTML += `<br> ⤷ ${match.groups.platform} ❌`;
+              threadLabel = '<label class="fix-it-label">Fail</label>';
+              threadHeader = ` &mdash; ${match.groups.platform}`;
             } else if (comment.match(/fail/i)) {
-              userVotes[userUrl] += '<br> ⤷ <em>other</em> ❌';
-              customReviewElementLabel = '<label class="fix-it-label">Fail</label>';
+              span.innerHTML += '<br> ⤷ ❌';
+              threadLabel = '<label class="fix-it-label">Fail</label>';
             } else {
-              userVotes[userUrl] += '<br> ⤷ ❓';
+              span.innerHTML += '<br> ⤷ ❓';
             }
           } else {
             // Record the vote of a non-build user.
             const vote = review.ship_it ? ' ✅' : ' 💬';
-            userVotes[userUrl] = vote;
+            span.innerHTML += vote;
           }
 
           // Annotate the review on the HTML page.
-          if (reviewElement) {
-            reviewElement.classList.add(eus.toCss(userUrl));
-            if (customReviewElementLabel) {
-              reviewElement.querySelector('.labels-container').insertAdjacentHTML('beforeend', customReviewElementLabel);
-            }
-            if (customReviewElementSubHeader) {
-              if (reviewElement) reviewElement.querySelector('.header a.user').insertAdjacentHTML('beforeend', customReviewElementSubHeader);
-            }
+          if (thread) {
+            thread.classList.add(eus.toCss(userUrl));
+            if (threadLabel) thread.querySelector('.labels-container').insertAdjacentHTML('beforeend', threadLabel);
+            if (threadHeader) thread.querySelector('.header a.user').insertAdjacentHTML('beforeend', threadHeader);
           }
 
-          if (userIsPrebuild) {
-            previousPrebuildReviewElements.push(reviewElement);
-          }
+          if (userIsPrebuild) prebuildThreads.push(thread);
         }
 
         // Annotates the `.niconfig` owner review block with approvals.
@@ -176,17 +183,14 @@
 
           const ownersText = owners.innerText.split('\n').filter(l => l.match(/^\.niconfig/));
           const rolesToUsers = {};
-          for (let line of ownersText) {
-            line = line.replace('.niconfig', '').replace(/\s/gi, '');
-            const [role, users] = line.split(':', 2);
+          for (const line of ownersText) {
+            const [role, users] = line.replace('.niconfig', '').replace(/\s/gi, '').split(':', 2);
             rolesToUsers[role.toLowerCase()] = users.split(',');
           }
 
-          for (const userUrl in userVotes) {
-            if (Object.prototype.hasOwnProperty.call(userVotes, userUrl)) {
-              const username = userUrl.replace('/users/', '').replace('/', '');
-              const annotation = username + userVotes[userUrl];
-              ownersHtml = ownersHtml.replace(username, annotation);
+          for (const username in userSpans) {
+            if (Object.prototype.hasOwnProperty.call(userSpans, username)) {
+              ownersHtml = ownersHtml.replace(username, userSpans[username].outerHTML);
             }
           }
 
@@ -195,16 +199,15 @@
         }
 
         // Annotate users on the right.
-        for (const userUrl in userVotes) {
-          if (Object.prototype.hasOwnProperty.call(userVotes, userUrl)) {
-            for (const link of document.querySelectorAll(`#review_request a[href="${userUrl}"]`)) {
-              link.insertAdjacentHTML('beforeend', userVotes[userUrl]);
-            }
+        for (const username in userSpans) {
+          if (Object.prototype.hasOwnProperty.call(userSpans, username)) {
+            const link = peopleField.querySelector(`a[href*="${username}"]`);
+            link.innerText = '';
+            link.appendChild(userSpans[username]);
           }
         }
 
         // Annotate groups on the right.
-        const reviewRequest = await getReviewBoardRequest(requestId);
         for (const group of reviewRequest.target_groups) {
           // Fetch each group in parallel.
           fetch(`${group.href}/users/`)
@@ -212,10 +215,10 @@
             .then(groupMembers => {
               const groupUrl = `/groups/${group.title}/`;
               for (const user of groupMembers.users) {
-                const vote = userVotes[user.url];
+                const vote = userSpans[user.username];
                 if (!vote) continue;
                 for (const link of document.querySelectorAll(`#review_request a[href="${groupUrl}"]`)) {
-                  link.insertAdjacentHTML('beforeend', `<br>⤷ ${user.username}${vote}`);
+                  link.insertAdjacentHTML('beforeend', `<br>⤷ ${user.outerHTML}${vote}`); // TODO: Test this may not work.
                 }
               }
             });
@@ -562,7 +565,7 @@
     }
 
     /* Make the review draft banner yellow. */
-    #review-banner .banner {
+    #review-banner .banner, #draft-banner.banner {
       background: #fd6;
       border-color: #555;
     }
