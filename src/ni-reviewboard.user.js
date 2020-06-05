@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         More Awesome NI Review Board
-// @version      1.11.0
+// @version      1.12.0
 // @namespace    https://www.ni.com
 // @author       Alejandro Barreto (National Instruments)
 // @license      MIT
@@ -21,7 +21,7 @@
 /* global eus, swal */
 
 (function () {
-  eus.globalSession.onFirst(document, 'body', () => {
+  eus.globalSession.onFirst(document, 'body', async () => {
     eus.registerCssClassConfig(document.body, 'Select theme', 'theme', 'ni-light', {
       'ni-dark': 'Dark',
       'ni-middle': 'Middle',
@@ -55,6 +55,30 @@
       if (clickedOnButton) return;
       header.querySelector('.collapse-button').click();
     });
+
+    // Show file regex patterns for default reviewers in groups list.
+    if (window.location.href.includes('/account/preferences/')) {
+      // Collect the default reviewers into a list, and cache the result so we can enhance the group items as they come in and out of the DOM during search.
+      const defaultReviewers = [];
+      for await (const defaultReviewer of getReviewBoardDefaultReviewers()) {
+        defaultReviewers.push(defaultReviewer);
+      }
+
+      // Enhance groups with their file regex patterns.
+      eus.globalSession.onEveryNew(document, 'div.groups li', groupItem => {
+        for (const defaultReviewer of defaultReviewers) {
+          const link = groupItem.querySelector('a[href*="/groups/"]');
+          const name = link.href.match(/\/groups\/(.+)\//i)[1];
+          for (const group of defaultReviewer.groups) {
+            if (group.title === name) {
+              const description = link.parentNode.nextSibling;
+              description.insertAdjacentHTML('beforeEnd', `<div class="default-reviewer-info"><b>${defaultReviewer.name}:</b>  ${defaultReviewer.file_regex}</div>`);
+              break;
+            }
+          }
+        }
+      });
+    }
 
     const reviewIdMatch = window.location.href.match(/\/r\/([0-9]*)\//i);
     if (reviewIdMatch) {
@@ -378,14 +402,22 @@
     return (await (await fetch(`https://review-board.natinst.com/api/review-requests/${requestId}/`)).json()).review_request;
   }
 
-  async function* getReviewBoardReviews(requestId) {
-    let nextReviewsFetchUrl = `https://review-board.natinst.com/api/review-requests/${requestId}/reviews/?max-results=200`;
+  async function* getReviewBoardPagingResults(url, valueProperty) {
+    let nextUrl = `${url}?max-results=200`;
     do {
       // eslint-disable-next-line no-await-in-loop
-      const reviewData = (await (await fetch(nextReviewsFetchUrl)).json());
-      nextReviewsFetchUrl = reviewData.links.next ? reviewData.links.next.href : null;
-      yield* reviewData.reviews;
-    } while (nextReviewsFetchUrl);
+      const reviewData = (await (await fetch(nextUrl)).json());
+      nextUrl = reviewData.links.next ? reviewData.links.next.href : null;
+      yield* reviewData[valueProperty];
+    } while (nextUrl);
+  }
+
+  function getReviewBoardReviews(requestId) {
+    return getReviewBoardPagingResults(`https://review-board.natinst.com/api/review-requests/${requestId}/reviews/`, 'reviews');
+  }
+
+  function getReviewBoardDefaultReviewers() {
+    return getReviewBoardPagingResults('https://review-board.natinst.com/api/default-reviewers/', 'default_reviewers');
   }
 
   async function postReview(requestId, markdown) {
@@ -789,6 +821,13 @@
       cursor: pointer;
       opacity: 1.0;
       background: #ddd;
+    }
+
+    /* Style the file regex patterns for default reviewers in groups list. */
+    .default-reviewer-info {
+      background: #f0f0f0;
+      padding-left: 1em;
+      font-family: Consolas, monospace;
     }
   `);
 }());

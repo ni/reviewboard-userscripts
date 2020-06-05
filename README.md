@@ -18,6 +18,7 @@ Primarily for use at NI. If you also use Review Board, it is possible that this 
 - Buttons to get reset on a review (aka. re-added or "please see these changes again")
 - Adds an icon to navigate to file from its diff
 - Lets you click anywhere in the header to expand/collapse a comment
+- Shows you the file regex patterns for group default reviewers from the groups join page
 
 ### Bringing you info where you expect it!
 
