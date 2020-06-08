@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         More Awesome NI Review Board
-// @version      1.12.5
+// @version      1.13.0
 // @namespace    https://www.ni.com
 // @author       Alejandro Barreto (National Instruments)
 // @license      MIT
@@ -232,7 +232,7 @@
             user.span.classList.add('declined');
             user.span.innerHTML += `${user.username}${user.details}`;
           } else {
-            user.span.innerHTML += `${user.username} ${user.vote}${user.details}`;
+            user.span.innerHTML += [user.username, user.vote, user.details].filter(Boolean).join(' ');
           }
         }
 
@@ -725,6 +725,14 @@
       margin-top: 1em;
       padding: 0.25em 1em;
       font-weight: bold;
+    }
+
+    /* Make user status in the owners block look distinct (helpful when you have a big review). */
+    .owner-info .user-status {
+      background: #fdfdfd;
+      border: 1px solid #eaeaea;
+      padding: 0ex 0.5ex;
+      border-radius: 5px;
     }
 
     /* Theming! */
