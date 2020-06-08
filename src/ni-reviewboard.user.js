@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         More Awesome NI Review Board
-// @version      1.12.2
+// @version      1.12.3
 // @namespace    https://www.ni.com
 // @author       Alejandro Barreto (National Instruments)
 // @license      MIT
@@ -183,7 +183,9 @@
               user.details += '<br> ⤷ ❓';
             }
 
-            prebuildThreads.push(thread);
+            if (thread) { // There are no threads on the diff review page.
+              prebuildThreads.push(thread);
+            }
           } else {
             // Record the vote of a non-build user.
 
@@ -202,11 +204,13 @@
             }
           }
 
-          // Annotate the review on the HTML page.
-          thread.classList.add(`users-${eus.toCss(username)}`);
-          if (threadClass) thread.classList.add(threadClass);
-          if (threadLabel) thread.querySelector('.labels-container').insertAdjacentHTML('beforeend', threadLabel);
-          if (threadSubtitle) thread.querySelector('.header a.user').insertAdjacentHTML('beforeend', ` &mdash; ${threadSubtitle}`);
+          // Annotate the review on the HTML page
+          if (thread) { // There are no threads on the diff review page.
+            thread.classList.add(`users-${eus.toCss(username)}`);
+            if (threadClass) thread.classList.add(threadClass);
+            if (threadLabel) thread.querySelector('.labels-container').insertAdjacentHTML('beforeend', threadLabel);
+            if (threadSubtitle) thread.querySelector('.header a.user').insertAdjacentHTML('beforeend', ` &mdash; ${threadSubtitle}`);
+          }
         }
 
         // Populate the span that has each user's name and vote.
