@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         More Awesome NI Review Board
-// @version      1.14.0
+// @version      1.15.0
 // @namespace    https://www.ni.com
 // @author       Alejandro Barreto (National Instruments)
 // @license      MIT
@@ -875,6 +875,21 @@
     body.ni-diff-wordwrap #diffs .diff-box tbody th {
       /* Don't break in the middle of a line number. */
       word-break: normal;
+    }
+
+    /* Nicer scrollbars. */
+    *::-webkit-scrollbar {
+      width: 12px;
+      height: 12px;
+    }
+    *::-webkit-scrollbar-track {
+      border: 1px solid #aaaaaa40;
+      background: none;
+    }
+    *::-webkit-scrollbar-thumb {
+      background: #bbb;
+      border: 1px solid #bbb;
+      border-radius: 5px;
     }
   `);
 }());
