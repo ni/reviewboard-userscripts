@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         More Awesome NI Review Board
-// @version      1.12.4
+// @version      1.12.5
 // @namespace    https://www.ni.com
 // @author       Alejandro Barreto (National Instruments)
 // @license      MIT
@@ -239,7 +239,7 @@
         // Annotates the `.niconfig` owner review block with approvals.
         const owners = document.querySelector('#field_beanbag_notefield_notes > p:last-child');
         if (owners && owners.innerText.includes('.niconfig Owners')) {
-          owners.innerHTML = Object.values(users).reduce((html, user) => html.replace(new RegExp(`\\b${user.username}\\b`), user.span.outerHTML), owners.innerHTML);
+          owners.innerHTML = Object.values(users).reduce((html, user) => html.replace(new RegExp(`\\b${user.username}\\b`, 'ig'), user.span.outerHTML), owners.innerHTML);
           owners.classList.add('owner-info');
         }
 
