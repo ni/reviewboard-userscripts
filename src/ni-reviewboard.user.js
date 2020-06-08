@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         More Awesome NI Review Board
-// @version      1.13.1
+// @version      1.14.0
 // @namespace    https://www.ni.com
 // @author       Alejandro Barreto (National Instruments)
 // @license      MIT
@@ -36,6 +36,12 @@
     eus.registerCssClassConfig(document.body, 'Select review order', 'feedOrder', 'ni-feed-oldest-first', {
       'ni-feed-newest-first': 'Newest first (AzDO)',
       'ni-feed-oldest-first': 'Oldest first (original)',
+    });
+
+    eus.registerCssClassConfig(document.body, 'Select wide diff behavior', 'wideDiffBehavior', 'ni-diff-scrollbars', {
+      'ni-diff-scrollbars': 'Add scrollbars',
+      'ni-diff-wordwrap': 'Word wrap',
+      'ni-diff-original': 'Original behavior',
     });
 
     // Replace plain gravatar defaults with a more useful icon.
@@ -852,6 +858,23 @@
       white-space: normal;
       line-height: normal;
       padding: 1ex 2ex;
+    }
+
+    /* Option: Add scrollbars to long horizontal diffs. */
+    body.ni-diff-scrollbars .comment_container,
+    body.ni-diff-scrollbars #diffs .diff-box {
+      overflow-x: auto;
+    }
+
+    /* Option: Word wrap long horizontal diffs. */
+    body.ni-diff-wordwrap .comment_container,
+    body.ni-diff-wordwrap #diffs .diff-box {
+      word-break: break-all;
+    }
+    body.ni-diff-wordwrap .comment_container tbody th,
+    body.ni-diff-wordwrap #diffs .diff-box tbody th {
+      /* Don't break in the middle of a line number. */
+      word-break: normal;
     }
   `);
 }());

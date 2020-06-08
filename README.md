@@ -19,6 +19,7 @@ Primarily for use at NI. If you also use Review Board, it is possible that this 
 - Adds an icon to navigate to file from its diff
 - Lets you click anywhere in the header to expand/collapse a comment
 - Shows you the file regex patterns for group default reviewers from the groups join page
+- Lets you choose between diff scrollbars or word wrap -- no more hidden text!
 
 ### Bringing you info where you expect it!
 
