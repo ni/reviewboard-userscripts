@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         More Awesome NI Review Board
-// @version      1.15.0
+// @version      1.16.0
 // @namespace    https://www.ni.com
 // @author       Alejandro Barreto (National Instruments)
 // @license      MIT
@@ -853,7 +853,7 @@
     .default-reviewer-info {
       background: #f0f0f0;
       padding-left: 1em;
-      font-family: Consolas, monospace;
+      font-family: Consolas, "Lucida Console", Monaco, monospace;
       overflow-wrap: anywhere;
       white-space: normal;
       line-height: normal;
@@ -890,6 +890,11 @@
       background: #bbb;
       border: 1px solid #bbb;
       border-radius: 5px;
+    }
+
+    /* Make more things Consolas. */
+    pre, textarea, .CodeMirror, .editable.field-text-area, tt, code, kbd, samp, .changedesc .body .diffed-text-area td {
+      font-family: Consolas, "Lucida Console", Monaco, monospace;
     }
   `);
 }());
