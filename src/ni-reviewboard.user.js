@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         More Awesome NI Review Board
-// @version      1.12.3
+// @version      1.12.4
 // @namespace    https://www.ni.com
 // @author       Alejandro Barreto (National Instruments)
 // @license      MIT
@@ -127,20 +127,32 @@
         // Reword the label for "People" since we removed the "Reviewers" header.
         document.querySelector('label[for=field_target_people]').innerText = 'Reviewers:';
 
-        // Go through each user and record their approval.
+        // Add users that are listed on the review. Note: We may add more people in the next loop that aren't listed currently who left feedback previously but are currently removed.
+
+        function createUserVotingRecord(username) {
+          return {
+            username,
+            span: document.createElement('span'),
+            vote: '',
+            details: '',
+          };
+        }
+
+        const reviewRequest = await getReviewBoardRequest(requestId);
         const users = {};
+        for (const user of reviewRequest.target_people) {
+          const username = user.title;
+          users[username] = createUserVotingRecord(username);
+        }
+
+        // Go through each user and record their approval.
         let prebuildThreads = [];
         for await (const review of getReviewBoardReviews(requestId)) {
           if (!review.public) continue;
 
           const username = review.links.user.title;
           // eslint-disable-next-line no-multi-assign
-          const user = users[username] = users[username] || {
-            username,
-            span: document.createElement('span'),
-            vote: '',
-            details: '',
-          };
+          const user = users[username] = users[username] || createUserVotingRecord(username);
 
           const thread = document.querySelector(`.review[data-review-id="${review.id}"]`);
           let threadClass;
@@ -295,7 +307,6 @@
         });
 
         // Annotate groups on the right.
-        const reviewRequest = await getReviewBoardRequest(requestId);
         for (const group of reviewRequest.target_groups) {
           // Fetch each group in parallel.
           fetch(`${group.href}/users/`)
