@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         More Awesome NI Review Board
-// @version      1.16.0
+// @version      1.16.1
 // @namespace    https://www.ni.com
 // @author       Alejandro Barreto (National Instruments)
 // @license      MIT
@@ -686,8 +686,11 @@
     }
     #container {
       position: inherit !important;
-      overflow: auto !important;
       padding-bottom: 10vh;
+    }
+    body:not(.reviewable-page) #container {
+      /* Exclude review pages, to fix bug #16 (horizontal scrollbars not visible for wide diffs). */
+      overflow: auto !important;
     }
 
     /* Make it clear that you can press the header to expand/collapse now. */
