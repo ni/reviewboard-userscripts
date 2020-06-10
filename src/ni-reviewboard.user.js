@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         More Awesome NI Review Board
-// @version      1.16.1
+// @version      1.17.0
 // @namespace    https://www.ni.com
 // @author       Alejandro Barreto (National Instruments)
 // @license      MIT
@@ -42,6 +42,11 @@
       'ni-diff-scrollbars': 'Add scrollbars',
       'ni-diff-wordwrap': 'Word wrap',
       'ni-diff-original': 'Original behavior',
+    });
+
+    eus.registerCssClassConfig(document.body, 'Select timestamp format', 'timestampFormat', 'ni-show-only-relative-times', {
+      'ni-show-only-relative-times': 'Show only relative times (original)',
+      'ni-show-absolute-times': 'Also show absolute times',
     });
 
     // Replace plain gravatar defaults with a more useful icon.
@@ -105,6 +110,11 @@
           fileNameRow.append(link);
         });
       }
+
+      // Annotate times with their absolute time.
+      eus.globalSession.onEveryNew(document, 'time.timesince', time => {
+        time.insertAdjacentHTML('beforeBegin', `<span class='timestamp-absolute'>${time.innerText} &mdash;</span> `);
+      });
 
       // Annotate approval details on users and groups.
       eus.globalSession.onFirst(document, '#fieldset_reviewers_body', async (targetPeopleAndGroups) => {
@@ -878,6 +888,11 @@
     body.ni-diff-wordwrap #diffs .diff-box tbody th {
       /* Don't break in the middle of a line number. */
       word-break: normal;
+    }
+
+    /* Show absolute times if the user wants it. */
+    body:not(.ni-show-absolute-times) .timestamp-absolute {
+      display: none;
     }
 
     /* Nicer scrollbars. */
