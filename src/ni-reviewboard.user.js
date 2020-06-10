@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         More Awesome NI Review Board
-// @version      1.17.0
+// @version      1.18.0
 // @namespace    https://www.ni.com
 // @author       Alejandro Barreto (National Instruments)
 // @license      MIT
@@ -44,9 +44,10 @@
       'ni-diff-original': 'Original behavior',
     });
 
-    eus.registerCssClassConfig(document.body, 'Select timestamp format', 'timestampFormat', 'ni-show-only-relative-times', {
-      'ni-show-only-relative-times': 'Show only relative times (original)',
+    eus.registerCssClassConfig(document.body, 'Select timestamp format', 'timestampFormat', 'ni-show-smart-times', {
+      'ni-show-original-times': 'Show only relative times (original)',
       'ni-show-absolute-times': 'Also show absolute times',
+      'ni-show-smart-times': 'Intelligently display times',
     });
 
     // Replace plain gravatar defaults with a more useful icon.
@@ -112,8 +113,12 @@
       }
 
       // Annotate times with their absolute time.
-      eus.globalSession.onEveryNew(document, 'time.timesince', time => {
-        time.insertAdjacentHTML('beforeBegin', `<span class='timestamp-absolute'>${time.innerText} &mdash;</span> `);
+      eus.globalSession.onEveryNew(document, 'time.timesince', timeElement => {
+        const timestamp = Date.parse(timeElement.innerText.replace('.', ''));
+        const daysSince = (Date.now() - timestamp) / (1000 * 3600 * 24 * 1.0);
+        const extraCssClass = daysSince >= 7 ? 'old-enough-timestamp' : '';
+        const [date, year, time] = timeElement.innerText.split(',', 3);
+        timeElement.insertAdjacentHTML('beforeBegin', `<span class='timestamp-absolute ${extraCssClass}'><span class="date">${date}, ${year}</span> <span class="time">${time}</span> &mdash; </span> `);
       });
 
       // Annotate approval details on users and groups.
@@ -891,7 +896,14 @@
     }
 
     /* Show absolute times if the user wants it. */
-    body:not(.ni-show-absolute-times) .timestamp-absolute {
+    .timestamp-absolute {
+      display: none;
+    }
+    body.ni-show-absolute-times .timestamp-absolute,
+    body.ni-show-smart-times .timestamp-absolute.old-enough-timestamp {
+      display: initial;
+    }
+    body.ni-show-smart-times .time {
       display: none;
     }
 
