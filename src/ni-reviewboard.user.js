@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         More Awesome NI Review Board
-// @version      1.18.0
+// @version      1.18.1
 // @namespace    https://www.ni.com
 // @author       Alejandro Barreto (National Instruments)
 // @license      MIT
@@ -15,7 +15,7 @@
 // @grant        GM_addValueChangeListener
 // @grant        GM_registerMenuCommand
 // @require      https://cdn.jsdelivr.net/npm/sweetalert2@9.13.1/dist/sweetalert2.all.min.js#sha384-8oDwN6wixJL8kVeuALUvK2VlyyQlpEEN5lg6bG26x2lvYQ1HWAV0k8e2OwiWIX8X
-// @require      https://gist.githubusercontent.com/alejandro5042/af2ee5b0ad92b271cd2c71615a05da2c/raw/easy-userscripts.js?v=71#sha384-wap0YOqYtSdG40UHxvqTwNbx08/Q0qskXT/Kl9uGHwt0f9OIH7pQP7JwT6wod2F2
+// @require      https://gist.githubusercontent.com/alejandro5042/af2ee5b0ad92b271cd2c71615a05da2c/raw/67b7203dfbc48f08ebddfc8327c92b2df28a3c4c/easy-userscripts.js?v=72#sha384-OgOM7UvZHxtPUmZoGbYhsgkLPuRj9SFTpO+LqbnaBzLDQaXmYlosSywfsljzjhCI
 // ==/UserScript==
 
 /* global eus, swal */
@@ -114,6 +114,7 @@
 
       // Annotate times with their absolute time.
       eus.globalSession.onEveryNew(document, 'time.timesince', timeElement => {
+        if (eus.seen(timeElement)) return;
         const timestamp = Date.parse(timeElement.innerText.replace('.', ''));
         const daysSince = (Date.now() - timestamp) / (1000 * 3600 * 24 * 1.0);
         const extraCssClass = daysSince >= 7 ? 'old-enough-timestamp' : '';
